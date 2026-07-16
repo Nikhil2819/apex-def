@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site.js';
+const primaryPhone = site.phones[0];
+---
+
+<BaseLayout
+  title="Page not found | APEX D.E.F"
+  description="The page you're looking for doesn't exist or has moved."
+  path="/404"
+>
+  <section class="section--dark" style="min-height: 100svh; display: grid; place-items: center; padding-top: var(--header-h-mobile);">
+    <div class="container" style="text-align: center; display: grid; gap: var(--sp-5); justify-items: center;">
+      <svg width="72" height="92" viewBox="0 0 22 28" fill="none" aria-hidden="true" style="opacity:.9">
+        <path d="M11 1.5C11 1.5 20.5 12.2 20.5 18.4C20.5 23.7 16.2 26.5 11 26.5C5.8 26.5 1.5 23.7 1.5 18.4C1.5 12.2 11 1.5 11 1.5Z" fill="none" stroke="#2FB6E9" stroke-width="1.2"/>
+        <ellipse cx="11" cy="27.2" rx="6" ry="0.8" fill="rgba(47,182,233,.35)"/>
+      </svg>
+      <h1 class="display-2">404. This page ran dry.</h1>
+      <p class="lead muted" style="max-width: 44ch;">
+        The page you're looking for doesn't exist or has moved. Our DEF, on the other hand, is
+        always in stock.
+      </p>
+      <div style="display: flex; gap: var(--sp-4); flex-wrap: wrap; justify-content: center;">
+        <a class="btn btn--primary-dark" href="/">Go Home</a>
+        <a class="btn btn--secondary-dark" href="/products">Explore Products</a>
+        <a class="btn btn--secondary-dark tnum" href={`tel:${primaryPhone.tel}`}>Call {primaryPhone.display}</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

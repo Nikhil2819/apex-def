@@ -1,0 +1,155 @@
+---
+import Logo from './Logo.astro';
+import { nav, site, skus, waLink } from '../data/site.js';
+
+const year = new Date().getFullYear();
+const companyLinks = nav.filter((n) => n.href !== '/');
+---
+
+<footer class="site-footer">
+  <div class="seam-liquid" aria-hidden="true"></div>
+  <div class="container container--max footer-grid">
+    <div class="footer-brand">
+      <Logo />
+      <p class="small muted">
+        Diesel Exhaust Fluid (AUS 32) manufactured in Bulandshahr, Uttar Pradesh by Apex
+        Environment Solutions. One fluid, six packs, lab-tested every batch.
+      </p>
+      {site.socials.length > 0 && (
+        <ul class="footer-socials" aria-label="Social media">
+          {site.socials.map((s) => (
+            <li><a href={s.url}>{s.name}</a></li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    <nav class="footer-col" aria-label="Company">
+      <h2 class="overline">Company</h2>
+      <ul>
+        {companyLinks.map((item) => (
+          <li><a href={item.href}>{item.label === 'Dealers' ? 'Become a Dealer' : item.label === 'About' ? 'About Us' : item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <nav class="footer-col" aria-label="Products">
+      <h2 class="overline">Products</h2>
+      <ul>
+        {skus.map((sku) => (
+          <li><a href={`/products#${sku.id}`}>{sku.pack}</a></li>
+        ))}
+        <li><a href="/products#spec-table">DEF Spec Sheet</a></li>
+      </ul>
+    </nav>
+
+    <div class="footer-col footer-contact">
+      <h2 class="overline">Contact</h2>
+      <address>
+        {site.address.lines.map((line) => <span>{line}</span>)}
+      </address>
+      <p>
+        <span class="muted small">Call / WhatsApp:</span><br />
+        {site.phones.map((p, i) => (
+          <>
+            <a class="tnum" href={`tel:${p.tel}`}>{p.display}</a>{i < site.phones.length - 1 && ' · '}
+          </>
+        ))}
+      </p>
+      {site.showEmails && (
+        <p>
+          {site.emails.map((e, i) => (
+            <>
+              <a href={`mailto:${e.address}`}>{e.address}</a>{i < site.emails.length - 1 && <br />}
+            </>
+          ))}
+        </p>
+      )}
+      <p class="small muted tnum">GSTIN: {site.gstin}</p>
+      <a class="btn btn--whatsapp footer-wa" href={waLink()} target="_blank" rel="noopener">WhatsApp Us</a>
+    </div>
+  </div>
+
+  <div class="container container--max footer-cert">
+    <p class="small">
+      Manufactured to ISO 22241-1 / IS 17042 (Part 1); BIS licence details will be displayed on
+      grant. Certificate of Analysis available with every batch.
+    </p>
+  </div>
+
+  <div class="container container--max footer-legal">
+    <p class="small muted">
+      © {year} Apex Environment Solutions. All rights reserved. APEX D.E.F is a brand of Apex
+      Environment Solutions. Made in Bulandshahr, U.P.
+    </p>
+    <p class="small muted footnote">
+      AdBlue® is a registered trademark of Verband der Automobilindustrie e.V. (VDA). APEX D.E.F
+      is an independent Indian brand and is not affiliated with, licensed by, or endorsed by VDA.
+    </p>
+  </div>
+  <div class="footer-watermark" aria-hidden="true">APEX</div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    background: var(--ink-950);
+    color: #fff;
+    overflow: hidden;
+    padding-bottom: calc(var(--mobile-bar-h) + 24px);
+  }
+  @media (min-width: 768px) {
+    .site-footer { padding-bottom: 0; }
+  }
+  .footer-grid {
+    display: grid;
+    gap: var(--sp-7);
+    padding-block: var(--sp-8);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1024px) { .footer-grid { grid-template-columns: 1.4fr 0.8fr 0.8fr 1.2fr; } }
+  .footer-brand { display: grid; gap: var(--sp-4); align-content: start; max-width: 34ch; }
+  .footer-col { display: grid; gap: var(--sp-4); align-content: start; }
+  .footer-col .overline { color: var(--def-400); }
+  .footer-col ul { list-style: none; padding: 0; display: grid; gap: 10px; }
+  .footer-col a, .footer-contact a:not(.btn) {
+    color: rgba(255, 255, 255, 0.82);
+    text-decoration: none;
+    padding-block: 2px;
+    display: inline-block;
+  }
+  .footer-col a:hover, .footer-contact a:not(.btn):hover { color: var(--def-400); }
+  .footer-contact { gap: var(--sp-3); }
+  .footer-contact address { font-style: normal; display: grid; }
+  .footer-wa { justify-self: start; margin-top: var(--sp-2); }
+  .footer-socials { list-style: none; padding: 0; display: flex; gap: var(--sp-4); }
+  .muted { color: rgba(255, 255, 255, 0.6); }
+  .footer-cert {
+    border-top: 1px solid var(--hairline-dark);
+    padding-block: var(--sp-5);
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .footer-legal {
+    border-top: 1px solid var(--hairline-dark);
+    padding-block: var(--sp-5);
+    display: grid;
+    gap: var(--sp-2);
+    position: relative;
+    z-index: 1;
+  }
+  .footer-watermark {
+    position: absolute;
+    bottom: -0.22em;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(6rem, 22vw, 20rem);
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+</style>

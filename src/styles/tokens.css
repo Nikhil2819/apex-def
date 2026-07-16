@@ -1,0 +1,70 @@
+/* APEX D.E.F design tokens — design.md §2 (LOCKED). */
+:root {
+  /* Color — core */
+  --ink-950: #060b14;
+  --navy-800: #0a1b3d;
+  --blue-600: #1b4f9c;
+  --def-400: #2fb6e9;
+  --leaf-500: #1f9d55;
+  --porcelain-50: #f6f9fc;
+  --slate-500: #5b6b7f;
+  --white: #ffffff;
+  /* Color — derived */
+  --ink-900: #0b1524;
+  --hairline-dark: rgba(255, 255, 255, 0.08);
+  --hairline-light: rgba(10, 27, 61, 0.1);
+  --def-glow: 0 0 24px rgba(47, 182, 233, 0.35);
+  --def-tint: rgba(47, 182, 233, 0.12);
+  --leaf-tint: rgba(31, 157, 85, 0.12);
+  --grad-liquid: linear-gradient(105deg, #0a1b3d 0%, #1b4f9c 45%, #2fb6e9 100%);
+  --scrim-dark: linear-gradient(180deg, rgba(6, 11, 20, 0.85), rgba(6, 11, 20, 0.45));
+  /* Semantic states */
+  --error-on-light: #c42b30;
+  --error-on-dark: #e5484d;
+  --warning: #f5a524;
+
+  /* Type */
+  --font-display: 'Clash Display', 'Arial Narrow', Impact, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fs-display-1: clamp(2.75rem, 1.55rem + 5.35vw, 6.5rem);
+  --fs-display-2: clamp(2rem, 1.33rem + 3vw, 4rem);
+  --fs-h3: clamp(1.5rem, 1.25rem + 1.1vw, 2.25rem);
+  --fs-h4: clamp(1.25rem, 1.16rem + 0.4vw, 1.5rem);
+  --fs-stat: clamp(2.5rem, 2rem + 2.2vw, 4.25rem);
+  --fs-lead: clamp(1.125rem, 1.06rem + 0.3vw, 1.375rem);
+  --fs-body: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem);
+  --fs-small: 0.875rem;
+  --fs-overline: 0.75rem;
+
+  /* Spacing (4px base) */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px;
+  --sp-6: 32px; --sp-7: 48px; --sp-8: 64px; --sp-9: 96px; --sp-10: 128px; --sp-11: 160px;
+  --section-pad-dark: clamp(5rem, 10vw, 10rem);
+  --section-pad-light: clamp(3.5rem, 8vw, 7.5rem);
+  --section-pad-strip: clamp(2.5rem, 6vw, 5rem);
+
+  /* Radius */
+  --r-xs: 4px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-pill: 999px;
+
+  /* Elevation (light) */
+  --e-1: 0 1px 2px rgba(10, 27, 61, 0.06);
+  --e-2: 0 4px 16px rgba(10, 27, 61, 0.08);
+  --e-3: 0 12px 40px rgba(10, 27, 61, 0.12);
+
+  /* Containers */
+  --container-max: 1440px;
+  --container-text: 1200px;
+  --container-narrow: 760px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --t-fast: 150ms; --t-base: 250ms; --t-med: 400ms; --t-slow: 600ms; --t-cine: 900ms; --t-epic: 1200ms;
+
+  /* Chrome */
+  --header-h: 88px;
+  --header-h-shrunk: 64px;
+  --header-h-mobile: 64px;
+  --mobile-bar-h: 64px;
+}
