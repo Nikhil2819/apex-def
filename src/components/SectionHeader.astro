@@ -1,0 +1,40 @@
+---
+// Shared section header: overline + display-2 heading + optional lead.
+// Heading is rendered with set:html so pages can pass <span class="grad-text"> fragments.
+
+interface Props {
+  overline: string;
+  heading: string;
+  lead?: string;
+  align?: 'left' | 'center';
+  /** id on the <h2>, for section aria-labelledby wiring */
+  id?: string;
+}
+
+const { overline, heading, lead, align = 'left', id } = Astro.props;
+---
+
+<div class:list={['section-header', { 'section-header--center': align === 'center' }]}>
+  <p class="overline" data-reveal style="--reveal-delay: 0">{overline}</p>
+  <h2 class="display-2" id={id} data-reveal style="--reveal-delay: 1" set:html={heading} />
+  {lead && (
+    <p class="lead muted" data-reveal style="--reveal-delay: 2">{lead}</p>
+  )}
+</div>
+
+<style>
+  .section-header {
+    display: grid;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-7);
+    max-width: 62ch;
+  }
+  .section-header--center {
+    justify-items: center;
+    text-align: center;
+    margin-inline: auto;
+  }
+  .section-header .lead {
+    max-width: 52ch;
+  }
+</style>

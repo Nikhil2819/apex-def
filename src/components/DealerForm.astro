@@ -1,0 +1,188 @@
+---
+// Dealership application form — fields, validation and messages per content.md §3.6
+// #dealer-form. Posts to Web3Forms when site.web3formsKey is set; otherwise falls
+// back to a prefilled WhatsApp deep link on submit (forms are never dead).
+import { site } from '../data/site.js';
+
+interface Props {
+  /** Page path the no-JS Web3Forms redirect returns to */
+  redirectPath?: string;
+}
+const { redirectPath = '/dealers' } = Astro.props;
+
+const hasKey = site.web3formsKey !== '';
+const redirectUrl = `${site.domain}${redirectPath}?submitted=1#dealer-form`;
+
+const errIcon =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="16.6" x2="12" y2="17" stroke-width="2.6"/></svg>';
+---
+
+<div class="card-light form-card" data-form-card>
+  <form
+    method="POST"
+    action="https://api.web3forms.com/submit"
+    data-def-form
+    data-form-fallback={hasKey ? undefined : 'true'}
+    data-success="Application received. Our dealer team will call you on the number provided. For a faster start, WhatsApp 'DEALER' to +91 84495 07181."
+    data-error="Something went wrong and your application didn't send. Please try again, or WhatsApp 'DEALER' to +91 84495 07181."
+    data-wa-intro="Hi APEX D.E.F, I want to discuss a dealership/distribution opportunity."
+    data-wa-number={site.whatsapp.number}
+  >
+    {hasKey && <input type="hidden" name="access_key" value={site.web3formsKey} />}
+    {hasKey && <input type="hidden" name="redirect" value={redirectUrl} />}
+    <input type="hidden" name="subject" value="New dealership application — apexdef.in" />
+    <input class="botcheck" type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="dlr-name">Your name*</label>
+        <input
+          id="dlr-name"
+          name="name"
+          type="text"
+          placeholder="Full name"
+          required
+          autocomplete="name"
+          aria-describedby="dlr-name-error"
+        />
+        <p class="error-msg" id="dlr-name-error"><Fragment set:html={errIcon} /> Please enter your name.</p>
+      </div>
+
+      <div class="field">
+        <label for="dlr-firm">Firm name</label>
+        <input
+          id="dlr-firm"
+          name="firm_name"
+          type="text"
+          placeholder="Business / shop name"
+          autocomplete="organization"
+          aria-describedby="dlr-firm-help"
+        />
+        <p class="helper" id="dlr-firm-help">As on GST registration, if registered.</p>
+      </div>
+
+      <div class="field">
+        <label for="dlr-phone">Phone (WhatsApp)*</label>
+        <input
+          id="dlr-phone"
+          name="phone"
+          type="tel"
+          inputmode="tel"
+          placeholder="10-digit mobile number"
+          required
+          autocomplete="tel"
+          pattern="(\+91[\s\-]?)?[0-9][0-9\s\-]{8,12}"
+          aria-describedby="dlr-phone-help dlr-phone-error"
+        />
+        <p class="helper" id="dlr-phone-help">We'll reach you here first.</p>
+        <p class="error-msg" id="dlr-phone-error"><Fragment set:html={errIcon} /> Enter a valid 10-digit mobile number.</p>
+      </div>
+
+      <div class="field">
+        <label for="dlr-city">City / District*</label>
+        <input
+          id="dlr-city"
+          name="city_district"
+          type="text"
+          placeholder="e.g. Bulandshahr, UP"
+          required
+          autocomplete="address-level2"
+          aria-describedby="dlr-city-help dlr-city-error"
+        />
+        <p class="helper" id="dlr-city-help">The territory you want to serve.</p>
+        <p class="error-msg" id="dlr-city-error"><Fragment set:html={errIcon} /> Please tell us your city or district.</p>
+      </div>
+
+      <div class="field">
+        <label for="dlr-business">Current business</label>
+        <input
+          id="dlr-business"
+          name="current_business"
+          type="text"
+          placeholder="e.g. lubricant distributor, tractor spares, fuel pump"
+          aria-describedby="dlr-business-help"
+        />
+        <p class="helper" id="dlr-business-help">What you sell today — helps us gauge fit.</p>
+      </div>
+
+      <div class="field">
+        <label for="dlr-volume">Expected monthly volume</label>
+        <select id="dlr-volume" name="expected_monthly_volume" aria-describedby="dlr-volume-help">
+          <option value="" selected>Choose a range</option>
+          <option>Under 500 L</option>
+          <option>500–2,000 L</option>
+          <option>2,000–10,000 L</option>
+          <option>10,000 L+</option>
+        </select>
+        <p class="helper" id="dlr-volume-help">Best guess is fine.</p>
+      </div>
+
+      <div class="field field--full">
+        <label for="dlr-message">Message</label>
+        <textarea id="dlr-message" name="message" rows="5" placeholder="Anything else we should know"></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn--primary-light form-submit" type="submit">Apply for Dealership</button>
+  </form>
+  <p class="form-status" role="status" aria-live="polite"></p>
+</div>
+
+<style>
+  .form-card {
+    color: var(--ink-900);
+    padding: clamp(24px, 4.5vw, 40px);
+  }
+  .botcheck {
+    display: none;
+  }
+  .form-grid {
+    display: grid;
+    gap: var(--sp-5);
+  }
+  @media (min-width: 640px) {
+    .form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .field--full {
+      grid-column: 1 / -1;
+    }
+  }
+  .error-msg :global(svg) {
+    display: inline;
+    vertical-align: -1.5px;
+    margin-right: 2px;
+  }
+  .form-submit {
+    width: 100%;
+    margin-top: var(--sp-5);
+  }
+  @media (min-width: 640px) {
+    .form-submit {
+      width: auto;
+    }
+  }
+  .form-status {
+    font-weight: 500;
+    border-radius: var(--r-sm);
+  }
+  .form-status.is-success {
+    margin-top: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    background: var(--leaf-tint);
+    color: var(--leaf-500);
+  }
+  form[hidden] + .form-status.is-success {
+    margin-top: 0;
+  }
+  .form-status.is-error {
+    margin-top: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    background: rgba(196, 43, 48, 0.08);
+    color: var(--error-on-light);
+  }
+</style>
+
+<script>
+  import '../scripts/def-forms.js';
+</script>

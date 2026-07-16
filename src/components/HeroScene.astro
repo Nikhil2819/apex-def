@@ -1,0 +1,81 @@
+---
+// Hero visual: PackVisual SVG is the always-rendered poster (all tiers, the LCP visual);
+// the Three.js canvas mounts over it ONLY on the full tier, desktop, post-idle
+// (design.md §4.1 — the canvas never mounts on mobile, on any tier).
+import PackVisual from './PackVisual.astro';
+---
+
+<div class="hero-scene" data-hero-scene>
+  <div class="hero-poster">
+    <PackVisual sku="def-20l" />
+    <div class="hero-sheen" aria-hidden="true"></div>
+  </div>
+  <canvas class="hero-canvas" aria-hidden="true"></canvas>
+</div>
+
+<script>
+  const el = document.querySelector('[data-hero-scene]');
+  const tier = document.documentElement.dataset.tier;
+  const isDesktop = matchMedia('(min-width: 1024px) and (hover: hover)').matches;
+  if (el && tier === 'full' && isDesktop) {
+    const mount = () =>
+      import('../scripts/hero-scene.js')
+        .then((m) => m.init(el))
+        .catch(() => {});
+    'requestIdleCallback' in window
+      ? requestIdleCallback(mount, { timeout: 3000 })
+      : setTimeout(mount, 600);
+  }
+</script>
+
+<style>
+  .hero-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+  }
+  .hero-poster {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.4s var(--ease-out);
+  }
+  .hero-poster :global(svg) {
+    width: min(72%, 380px);
+    height: auto;
+    filter: drop-shadow(0 24px 48px rgba(6, 11, 20, 0.45));
+  }
+  .hero-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.4s var(--ease-out);
+    pointer-events: none;
+  }
+  .hero-scene.is-3d-ready .hero-canvas { opacity: 1; pointer-events: auto; }
+  .hero-scene.is-3d-ready .hero-poster { opacity: 0; }
+
+  /* Mobile motion beat (design.md §4.1): one-time def-400 sheen sweep post-load; no canvas. */
+  .hero-sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 42%, rgba(47, 182, 233, 0.16) 50%, transparent 58%);
+    background-size: 300% 100%;
+    background-position: 120% 0;
+    pointer-events: none;
+  }
+  html[data-tier='full'] .hero-sheen, html[data-tier='lite'] .hero-sheen {
+    animation: sheen-sweep 1.2s var(--ease-inout) 2s 1 both;
+  }
+  @keyframes sheen-sweep {
+    from { background-position: 120% 0; }
+    to { background-position: -60% 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-sheen { animation: none !important; }
+  }
+</style>

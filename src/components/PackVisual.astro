@@ -1,0 +1,150 @@
+---
+// PackVisual — consistent vector illustrations of the six APEX D.E.F packs.
+// Style contract (design.md §2.6–2.7): shared 200×240 viewBox, floor-shadow ellipse,
+// HDPE body gradient #1B4F9C→#0A1B3D, left-edge highlight, #2FB6E9 cap/lid accents,
+// white front label panel with droplet + brand lines, 1.5px strokes, no filters.
+import { skus } from '../data/site.js';
+
+type SkuId = 'def-5l' | 'def-10l' | 'def-20l' | 'def-210l' | 'def-1000l' | 'def-bulk';
+
+interface Props {
+  sku: SkuId;
+  /** CSS width of the rendered SVG */
+  size?: string;
+  /** false hides the front label text (for tiny thumbnails) */
+  label?: boolean;
+}
+
+const { sku, size = '100%', label = true } = Astro.props;
+const meta = skus.find((s) => s.id === sku);
+const ariaLabel = `Illustration: ${meta?.title ?? 'APEX D.E.F pack'}`;
+
+const NAVY = '#0A1B3D';
+const METAL = '#8FA3B8';
+const ACCENT = '#2FB6E9';
+
+// Shared vertical HDPE gradient in user space so multi-part bodies blend seamlessly.
+const grad = (id: string, y1: number, y2: number, top = '#1B4F9C', bottom = NAVY) =>
+  `<defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="${y1}" x2="0" y2="${y2}">` +
+  `<stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bottom}"/></linearGradient></defs>`;
+
+const floorShadow = (rx: number, cy = 224, ry = 7) =>
+  `<ellipse cx="100" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(6,11,20,0.10)"/>`;
+
+const edgeHighlight = (x: number, y: number, h: number, opacity = 0.18) =>
+  `<rect x="${x}" y="${y}" width="6" height="${h}" rx="3" fill="rgba(255,255,255,${opacity})"/>`;
+
+// White front label panel: droplet glyph + 'APEX D.E.F' + tiny descriptor + pack size.
+const labelPanel = (x: number, y: number, w: number, h: number, sizeText: string, sizeFs: number) => {
+  const cx = +(x + w / 2).toFixed(1);
+  const brandFs = Math.min(9, +(w * 0.125).toFixed(1));
+  const tinyFs = +(w * 0.055).toFixed(1);
+  const dropY = +(y + h * 0.2).toFixed(1);
+  const brandY = +(y + h * 0.47).toFixed(1);
+  const tinyY = +(y + h * 0.59).toFixed(1);
+  const sizeY = +(y + h * 0.85).toFixed(1);
+  const panel = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#FFFFFF" stroke="rgba(10,27,61,0.10)" stroke-width="1.5"/>`;
+  if (!label) return panel;
+  return (
+    panel +
+    `<path transform="translate(${cx} ${dropY})" d="M0 -5.2C2.6 -1.9 4.1 0.3 4.1 2.2A4.1 4.1 0 1 1 -4.1 2.2C-4.1 0.3 -2.6 -1.9 0 -5.2Z" fill="#1B4F9C"/>` +
+    `<text x="${cx}" y="${brandY}" text-anchor="middle" fill="${NAVY}" font-size="${brandFs}" style="font-family:var(--font-display);font-weight:600;letter-spacing:0.02em">APEX D.E.F</text>` +
+    `<text x="${cx}" y="${tinyY}" text-anchor="middle" fill="#5B6B7F" font-size="${tinyFs}" style="font-family:var(--font-body);font-weight:600;letter-spacing:0.12em">DIESEL EXHAUST FLUID</text>` +
+    `<text x="${cx}" y="${sizeY}" text-anchor="middle" fill="${NAVY}" font-size="${sizeFs}" style="font-family:var(--font-display);font-weight:600">${sizeText}</text>`
+  );
+};
+
+const builders: Record<SkuId, () => string> = {
+  // Compact rounded-rect can, top handle cutout, corner spout cap.
+  'def-5l': () =>
+    grad('body-def-5l', 66, 218) +
+    floorShadow(52) +
+    `<rect x="50" y="72" width="18" height="12" rx="3" fill="${ACCENT}"/>` +
+    `<rect x="55" y="84" width="8" height="14" fill="url(#body-def-5l)"/>` +
+    `<path fill="url(#body-def-5l)" fill-rule="evenodd" d="M83 66h34a13 13 0 0 1 13 13v8a13 13 0 0 1-13 13H83a13 13 0 0 1-13-13v-8a13 13 0 0 1 13-13Zm7 8h20a9 9 0 0 1 9 9 9 9 0 0 1-9 9H90a9 9 0 0 1-9-9 9 9 0 0 1 9-9Z"/>` +
+    `<rect x="52" y="96" width="96" height="122" rx="10" fill="url(#body-def-5l)"/>` +
+    edgeHighlight(58, 104, 106) +
+    labelPanel(66, 124, 68, 64, '5 L', 15),
+
+  // Taller/wider can, centre cap, two side-grip grooves above the label.
+  'def-10l': () =>
+    grad('body-def-10l', 48, 218) +
+    floorShadow(58) +
+    `<rect x="86" y="48" width="28" height="13" rx="3" fill="${ACCENT}"/>` +
+    `<rect x="92" y="59" width="16" height="12" fill="url(#body-def-10l)"/>` +
+    `<rect x="46" y="68" width="108" height="150" rx="11" fill="url(#body-def-10l)"/>` +
+    edgeHighlight(52, 76, 134) +
+    `<path d="M56 86h88M56 95h88" stroke="rgba(6,11,20,0.32)" stroke-width="1.5" stroke-linecap="round"/>` +
+    labelPanel(62, 108, 76, 72, '10 L', 16),
+
+  // Cylindrical bucket, slight taper, lid rim + bail-handle arc over the top.
+  'def-20l': () =>
+    grad('body-def-20l', 94, 216) +
+    floorShadow(55) +
+    `<path d="M52 88C60 42 140 42 148 88" fill="none" stroke="${METAL}" stroke-width="1.5"/>` +
+    `<circle cx="52" cy="88" r="2.5" fill="${METAL}"/><circle cx="148" cy="88" r="2.5" fill="${METAL}"/>` +
+    `<path d="M52 94h96l-7.5 113q-0.7 9-10 9h-61q-9.3 0-10-9L52 94Z" fill="url(#body-def-20l)"/>` +
+    `<rect x="46" y="82" width="108" height="12" rx="6" fill="${ACCENT}"/>` +
+    edgeHighlight(64, 102, 100) +
+    labelPanel(64, 112, 72, 66, '20 L', 16),
+
+  // Tall drum: accent top rim with bung hints + two protruding rib rings.
+  'def-210l': () =>
+    grad('body-def-210l', 54, 218) +
+    floorShadow(54) +
+    `<rect x="50" y="54" width="100" height="164" rx="8" fill="url(#body-def-210l)"/>` +
+    `<rect x="50" y="54" width="100" height="10" rx="5" fill="${ACCENT}"/>` +
+    `<circle cx="78" cy="59" r="3" fill="${NAVY}" opacity="0.55"/><circle cx="122" cy="59" r="3" fill="${NAVY}" opacity="0.55"/>` +
+    edgeHighlight(56, 72, 134) +
+    `<rect x="46" y="92" width="108" height="7" rx="3.5" fill="#123A72"/><rect x="46" y="92" width="108" height="2" rx="1" fill="rgba(255,255,255,0.16)"/>` +
+    `<rect x="46" y="176" width="108" height="7" rx="3.5" fill="#123A72"/><rect x="46" y="176" width="108" height="2" rx="1" fill="rgba(255,255,255,0.16)"/>` +
+    labelPanel(64, 108, 72, 62, '210 L', 14),
+
+  // IBC tote: light bottle in a galvanized cage grid on a navy pallet.
+  'def-1000l': () =>
+    grad('body-def-1000l', 72, 202, '#E8F0F8', '#BFD3E6') +
+    floorShadow(62, 227) +
+    `<rect x="38" y="202" width="124" height="11" rx="2" fill="${NAVY}"/>` +
+    `<path d="M44 213h14v9H44Zm49 0h14v9H93Zm49 0h14v9h-14Z" fill="${NAVY}"/>` +
+    `<rect x="88" y="62" width="24" height="13" rx="3" fill="${ACCENT}"/>` +
+    `<rect x="50" y="72" width="100" height="130" rx="10" fill="url(#body-def-1000l)"/>` +
+    edgeHighlight(56, 80, 114, 0.5) +
+    `<rect x="47" y="69" width="106" height="136" rx="5" fill="none" stroke="${METAL}" stroke-width="1.5"/>` +
+    `<path d="M73.5 69v136M100 69v136M126.5 69v136M47 103h106M47 137h106M47 171h106" stroke="${METAL}" stroke-width="1.5"/>` +
+    labelPanel(68, 110, 64, 58, '1000 L', 12.5),
+
+  // Not a pack: side-view tanker trailer, lighter line-illustration treatment.
+  'def-bulk': () =>
+    grad('body-def-bulk', 108, 178) +
+    floorShadow(84, 216, 6.5) +
+    `<rect x="90" y="98" width="20" height="12" rx="3" fill="${ACCENT}"/>` +
+    `<rect x="18" y="108" width="164" height="70" rx="35" fill="url(#body-def-bulk)"/>` +
+    `<rect x="34" y="116" width="108" height="6" rx="3" fill="rgba(255,255,255,0.18)"/>` +
+    (label
+      ? `<text x="100" y="141" text-anchor="middle" fill="#FFFFFF" font-size="13" style="font-family:var(--font-display);font-weight:600;letter-spacing:0.02em">APEX D.E.F</text>` +
+        `<text x="100" y="153" text-anchor="middle" fill="rgba(255,255,255,0.72)" font-size="4.8" style="font-family:var(--font-body);font-weight:600;letter-spacing:0.12em">DIESEL EXHAUST FLUID</text>`
+      : '') +
+    `<path d="M34 184h136M52 184v24M45 208h14" stroke="${METAL}" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<circle cx="122" cy="197" r="13" fill="${NAVY}" stroke="${METAL}" stroke-width="1.5"/>` +
+    `<circle cx="150" cy="197" r="13" fill="${NAVY}" stroke="${METAL}" stroke-width="1.5"/>` +
+    `<circle cx="122" cy="197" r="4" fill="${METAL}"/><circle cx="150" cy="197" r="4" fill="${METAL}"/>`,
+};
+
+const svgInner = builders[sku]();
+---
+
+<svg
+  class="pack-visual"
+  viewBox="0 0 200 240"
+  role="img"
+  aria-label={ariaLabel}
+  style={`width: ${size}`}
+  set:html={svgInner}
+/>
+
+<style>
+  .pack-visual {
+    height: auto;
+    max-width: 100%;
+  }
+</style>

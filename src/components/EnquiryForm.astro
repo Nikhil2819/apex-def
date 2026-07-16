@@ -1,0 +1,159 @@
+---
+// Contact enquiry form — fields, validation and messages per content.md §3.7 #form.
+// Posts to Web3Forms when site.web3formsKey is set; otherwise falls back to a
+// prefilled WhatsApp deep link on submit (forms are never dead).
+import { site } from '../data/site.js';
+
+interface Props {
+  /** Page path the no-JS Web3Forms redirect returns to */
+  redirectPath?: string;
+}
+const { redirectPath = '/contact' } = Astro.props;
+
+const hasKey = site.web3formsKey !== '';
+const redirectUrl = `${site.domain}${redirectPath}?submitted=1#form`;
+
+const errIcon =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="16.6" x2="12" y2="17" stroke-width="2.6"/></svg>';
+---
+
+<div class="card-light form-card" data-form-card>
+  <form
+    method="POST"
+    action="https://api.web3forms.com/submit"
+    data-def-form
+    data-form-fallback={hasKey ? undefined : 'true'}
+    data-success="Enquiry received — we'll call you within one working day. Need it faster? Call +91 84495 07181 now."
+    data-error="Your enquiry didn't send. Please try again — or skip the form entirely and call +91 84495 07181."
+    data-wa-intro="Hi APEX D.E.F, I want to enquire about DEF supply."
+    data-wa-number={site.whatsapp.number}
+  >
+    {hasKey && <input type="hidden" name="access_key" value={site.web3formsKey} />}
+    {hasKey && <input type="hidden" name="redirect" value={redirectUrl} />}
+    <input type="hidden" name="subject" value="New enquiry from apexdef.in" />
+    <input class="botcheck" type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+    <div class="form-grid">
+      <div class="field">
+        <label for="enq-name">Your name*</label>
+        <input
+          id="enq-name"
+          name="name"
+          type="text"
+          placeholder="Full name"
+          required
+          autocomplete="name"
+          aria-describedby="enq-name-error"
+        />
+        <p class="error-msg" id="enq-name-error"><Fragment set:html={errIcon} /> Please enter your name.</p>
+      </div>
+
+      <div class="field">
+        <label for="enq-phone">Phone (WhatsApp)*</label>
+        <input
+          id="enq-phone"
+          name="phone"
+          type="tel"
+          inputmode="tel"
+          placeholder="10-digit mobile number"
+          required
+          autocomplete="tel"
+          pattern="(\+91[\s\-]?)?[0-9][0-9\s\-]{8,12}"
+          aria-describedby="enq-phone-help enq-phone-error"
+        />
+        <p class="helper" id="enq-phone-help">We reply by call or WhatsApp first.</p>
+        <p class="error-msg" id="enq-phone-error"><Fragment set:html={errIcon} /> Enter a valid 10-digit mobile number.</p>
+      </div>
+
+      <div class="field field--full">
+        <label for="enq-intent">I want to*</label>
+        <select id="enq-intent" name="enquiry_type" required aria-describedby="enq-intent-error">
+          <option value="" selected disabled>Choose one</option>
+          <option>Buy DEF</option>
+          <option>Become a dealer</option>
+          <option>Bulk enquiry</option>
+          <option>Other</option>
+        </select>
+        <p class="error-msg" id="enq-intent-error"><Fragment set:html={errIcon} /> Please choose what your enquiry is about.</p>
+      </div>
+
+      <div class="field field--full">
+        <label for="enq-message">Message</label>
+        <textarea
+          id="enq-message"
+          name="message"
+          rows="5"
+          placeholder="Pack size, quantity, location — whatever helps us respond faster"
+        ></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn--primary-light form-submit" type="submit">Send Enquiry</button>
+    <p class="form-privacy">We use your details only to respond to this enquiry. No spam, no lists.</p>
+  </form>
+  <p class="form-status" role="status" aria-live="polite"></p>
+</div>
+
+<style>
+  .form-card {
+    color: var(--ink-900);
+    padding: clamp(24px, 4.5vw, 40px);
+  }
+  .botcheck {
+    display: none;
+  }
+  .form-grid {
+    display: grid;
+    gap: var(--sp-5);
+  }
+  @media (min-width: 640px) {
+    .form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .field--full {
+      grid-column: 1 / -1;
+    }
+  }
+  .error-msg :global(svg) {
+    display: inline;
+    vertical-align: -1.5px;
+    margin-right: 2px;
+  }
+  .form-submit {
+    width: 100%;
+    margin-top: var(--sp-5);
+  }
+  @media (min-width: 640px) {
+    .form-submit {
+      width: auto;
+    }
+  }
+  .form-privacy {
+    margin-top: var(--sp-4);
+    font-size: 0.8125rem;
+    color: var(--slate-500);
+  }
+  .form-status {
+    font-weight: 500;
+    border-radius: var(--r-sm);
+  }
+  .form-status.is-success {
+    margin-top: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    background: var(--leaf-tint);
+    color: var(--leaf-500);
+  }
+  form[hidden] + .form-status.is-success {
+    margin-top: 0;
+  }
+  .form-status.is-error {
+    margin-top: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    background: rgba(196, 43, 48, 0.08);
+    color: var(--error-on-light);
+  }
+</style>
+
+<script>
+  import '../scripts/def-forms.js';
+</script>

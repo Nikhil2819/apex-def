@@ -1,0 +1,34 @@
+---
+// FAQ accordion — progressive <details> base, styled by global.css `.faq`.
+// No microdata on purpose: FAQPage schema ships as JSON-LD (src/utils/schema.js faqPage()).
+
+interface Props {
+  items: { q: string; a: string }[];
+  heading?: string;
+}
+
+const { items, heading } = Astro.props;
+---
+
+<div class="faq">
+  {heading && <h3 class="h4 faq-heading">{heading}</h3>}
+  {items.map((item) => (
+    <details>
+      <summary>{item.q}</summary>
+      <div class="faq-a" set:html={item.a} />
+    </details>
+  ))}
+</div>
+
+<style>
+  .faq-heading {
+    margin-bottom: var(--sp-4);
+  }
+  /* Close the run of hairlines under the last row */
+  .faq details:last-of-type {
+    border-bottom: 1px solid var(--hairline-light);
+  }
+  :global(.section--dark) .faq details:last-of-type {
+    border-bottom-color: var(--hairline-dark);
+  }
+</style>
