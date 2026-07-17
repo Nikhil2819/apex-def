@@ -83,6 +83,30 @@ export async function init(tier) {
     });
   });
 
+  /* ---------- Home products rail: pinned horizontal scrub (desktop, full tier) ----------
+     Base experience everywhere is a native scroll-snap carousel; on capable desktops the
+     section pins and scroll drives the rail — cards sweep past as you scroll. */
+  mm.add('(min-width: 1024px)', () => {
+    if (tier !== 'full') return;
+    const rail = document.querySelector('[data-rail]');
+    if (!rail) return;
+    const section = rail.closest('section');
+    const distance = () => rail.scrollWidth - rail.clientWidth;
+    if (!section || distance() < 80) return;
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      end: () => `+=${Math.max(distance(), 600)}`,
+      pin: true,
+      scrub: 0.6,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        rail.scrollLeft = self.progress * distance();
+      },
+    });
+    return () => st.kill();
+  });
+
   /* ---------- Magnetic primary buttons (desktop pointer-fine, full tier) ---------- */
   mm.add('(min-width: 1024px) and (hover: hover) and (pointer: fine)', () => {
     if (tier !== 'full') return;

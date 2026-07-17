@@ -1,17 +1,907 @@
 ---
+// Knowledge /what-is-def — content.md §3.5, design.md §4.5. Static-first base;
+// motion-layer contracts shipped as data attributes: [data-scr] / [data-scr-scene]
+// (#scr pipeline, later pinned scrollytelling), [data-norms] / [data-norm-node]
+// (#norms-india timeline carousel). Entrances via the global data-reveal IO system;
+// per-scene CSS loops live in ScrScene.astro (html[data-tier] gated, frozen on static).
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import Faq from '../components/Faq.astro';
+import CompositionDroplet from '../components/knowledge/CompositionDroplet.astro';
+import ScrScene from '../components/knowledge/ScrScene.astro';
+import HexMotif from '../components/products/HexMotif.astro';
+import { site } from '../data/site.js';
+import { graph, faqPage, breadcrumbs } from '../utils/schema.js';
+
+const [phone1, phone2] = site.phones;
+
+// The one legally-vetted trademark line (content.md §2.2 / §3.5 page-bottom footnote).
+const TRADEMARK_FOOTNOTE =
+  'AdBlue® is a registered trademark of Verband der Automobilindustrie e.V. (VDA). APEX D.E.F is an independent Indian brand and is not affiliated with, licensed by, or endorsed by VDA.';
+
+// #what-is-def fact chips — content.md §3.5 (VERBATIM).
+const factChips = ['32.5% urea', 'Freezes at −11 °C', 'Non-toxic, non-flammable', 'Not a fuel additive'];
+
+// #scr step captions — content.md §3.5 `#scr` (VERBATIM).
+const scrSteps = [
+  {
+    title: 'The problem leaves the engine.',
+    caption:
+      'Diesel combustion is hot and efficient — and that heat creates NOx, the nitrogen oxides behind smog and acid rain. Watch the red particles stream out of the engine.',
+  },
+  {
+    title: 'DEF is injected.',
+    caption:
+      'A dosing module sprays a fine mist of DEF into the hot exhaust stream — a few millilitres at a time, metered by the ECU.',
+  },
+  {
+    title: 'Heat splits urea into ammonia.',
+    caption:
+      'At exhaust temperatures, the urea in DEF decomposes into ammonia (NH₃) and CO₂. The ammonia is the working agent.',
+  },
+  {
+    title: 'The catalyst does the swap.',
+    caption:
+      'Inside the SCR catalyst, ammonia meets NOx on the catalyst surface and reduces it — nitrogen oxides are literally taken apart.',
+  },
+  {
+    title: 'Clean air comes out.',
+    caption:
+      'What exits the tailpipe is nitrogen (N₂) and water vapour (H₂O) — the same gases that make up most of the air you breathe. NOx is cut by roughly 90%.',
+  },
+  {
+    title: 'Why purity decides everything.',
+    caption:
+      "This chemistry runs on a catalyst that ppm-level copper, zinc or iron can permanently poison. That's why the ISO 22241 spec exists — and why what's in the can matters more than what's on the label.",
+  },
+];
+
+// #norms-india — the locked 7-milestone set, entry copy VERBATIM per content.md §3.5.
+// Icons: drawn 1.5px-stroke duotone glyphs (48-grid) — truck / crane / tractor /
+// gauge (OBD) / genset / seal-check / arrow-up-right, per design.md §4.5.
+const normIcons: Record<string, string> = {
+  truck:
+    '<rect x="6" y="14" width="26" height="16" rx="3" fill="var(--def-tint)"/>' +
+    '<rect x="8" y="16" width="20" height="12" rx="2" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+    '<path d="M28 20h6l6 6v2h-12Z" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<circle cx="15" cy="31" r="3" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+    '<circle cx="33" cy="31" r="3" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>',
+  crane:
+    '<rect x="12" y="12" width="26" height="5" fill="var(--def-tint)"/>' +
+    '<path d="M14 38V14M8 38h12M10 14h28M32 14v8" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="32" cy="25" r="2.5" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>',
+  tractor:
+    '<circle cx="16" cy="31" r="8.5" fill="var(--def-tint)"/>' +
+    '<circle cx="16" cy="31" r="6.5" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+    '<circle cx="16" cy="31" r="1.8" fill="var(--blue-600)"/>' +
+    '<circle cx="36" cy="34" r="3.8" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+    '<path d="M22.5 31h9.7M16 24.5V19h9l4.5 8.5H36a3.5 3.5 0 0 1 3.5 3.5v3" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M20 19v-4" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round"/>',
+  gauge:
+    '<circle cx="24" cy="26" r="12" fill="var(--def-tint)"/>' +
+    '<path d="M13 31a12 12 0 1 1 22 0" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round"/>' +
+    '<path d="M24 26l6.2-6.2" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round"/>' +
+    '<circle cx="24" cy="26" r="1.8" fill="var(--blue-600)"/>' +
+    '<path d="M24 14.5v2.5M14.5 20l2.2 1.3M33.5 20l-2.2 1.3" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round"/>',
+  genset:
+    '<rect x="8" y="14" width="32" height="20" rx="3" fill="var(--def-tint)"/>' +
+    '<rect x="10" y="16" width="28" height="16" rx="2.5" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+    '<path d="M25.5 18.5 20 25.5h4l-2.5 6L28.5 23h-4l2.5-4.5Z" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path d="M15 32v4M33 32v4" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round"/>',
+  seal:
+    '<circle cx="24" cy="24" r="12" fill="var(--def-tint)"/>' +
+    '<circle cx="24" cy="24" r="9.5" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+    '<circle cx="24" cy="24" r="13" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-dasharray="2.5 3.4"/>' +
+    '<path d="m19.5 24.2 3.2 3.2 6-7" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  arrow:
+    '<circle cx="24" cy="24" r="13" fill="var(--def-tint)"/>' +
+    '<path d="M17 31 31 17M20.5 17H31v10.5" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+
+const norms = [
+  {
+    year: 'April 2020',
+    ghost: '2020',
+    title: 'BS-VI (on-road).',
+    line: 'India jumps straight from BS-IV to BS-VI. NOx limits drop ~90% for heavy diesel vehicles; SCR becomes standard fitment on trucks and buses. Every one of them consumes DEF.',
+    icon: normIcons.truck,
+    phasing: false,
+  },
+  {
+    year: 'October 2021',
+    ghost: '2021',
+    title: 'CEV Stage IV (construction).',
+    line: 'Construction equipment vehicles from 37–560 kW get their emission step-up; SCR spreads to backhoes, excavators and cranes.',
+    icon: normIcons.crane,
+    phasing: false,
+  },
+  {
+    year: 'January 2023',
+    ghost: '2023',
+    title: 'TREM Stage IV (tractors >50 HP).',
+    line: 'The agriculture turning point: every new tractor above 50 HP needs modern after-treatment — SCR on most models. DEF arrives in the village workshop.',
+    icon: normIcons.tractor,
+    phasing: false,
+  },
+  {
+    year: 'April 2023',
+    ghost: '2023',
+    title: 'BS-VI OBD Phase-II.',
+    line: 'On-board diagnostics tighten: vehicles now actively police DEF level and quality in real time, with derate as the penalty.',
+    icon: normIcons.gauge,
+    phasing: false,
+  },
+  {
+    year: 'July 2023',
+    ghost: '2023',
+    title: 'CPCB IV+ (gensets).',
+    line: 'New DG sets up to 800 kW require after-treatment with monitored DEF usage. Facility managers become DEF buyers.',
+    icon: normIcons.genset,
+    phasing: false,
+  },
+  {
+    year: 'August 2024',
+    ghost: '2024',
+    title: 'BIS certification mandatory for DEF.',
+    line: 'Quality Control Order S.O. 922(E) takes effect: DEF made or imported in India must be certified by BIS to IS 17042 (Part 1) and bear the ISI mark. Unmarked fluid is now illegal to sell.',
+    icon: normIcons.seal,
+    phasing: false,
+  },
+  {
+    year: '2026 onward',
+    ghost: '2026+',
+    title: 'TREM V / CEV V phase-in.',
+    line: 'The next stages are being phased in from 2026, extending after-treatment across more power bands. Direction of travel: more SCR, more DEF.',
+    icon: normIcons.arrow,
+    phasing: true,
+  },
+];
+
+// #storage-handling — shelf-life table + DO/DON'T lists, VERBATIM per content.md §3.5.
+const shelfRows = [
+  ['≤ 25 °C', '18 months'],
+  ['≤ 30 °C', '12 months'],
+  ['≤ 35 °C', '6 months'],
+  ['> 35 °C', 'Test before use — significant quality loss'],
+];
+
+const storageDos = [
+  'Store sealed, in shade, ideally under 30 °C — never in direct sunlight.',
+  'Use dedicated DEF equipment only: pumps, funnels, nozzles and hoses that touch nothing else.',
+  'Choose compatible materials: HDPE, polypropylene, stainless steel 304/316, FRP; EPDM or FKM (Viton) seals.',
+  'Rinse dispensing equipment with demineralised water or fresh DEF.',
+  'Check the printed expiry date before every top-up; keep containers closed against dust.',
+  'Leave headspace if freezing is possible — DEF expands ~7% when frozen, and thaws with zero quality loss.',
+];
+
+const storageDonts = [
+  'Never top up with tap water, RO reject, fertilizer-grade urea solution, or diesel — even once.',
+  'Never let DEF touch copper, brass, zinc, aluminium, mild/carbon steel, nickel plating, PVC or nitrile (Buna-N) seals — leached ions poison the SCR catalyst.',
+  'Never reuse diesel or oil containers, funnels or jugs for DEF.',
+  'Never store above 35 °C or in sunlight — urea decomposes and concentration drifts out of spec.',
+  'Never buy unsealed, undated or decanted fluid.',
+];
+
+// #faqs — all 14 Q&As VERBATIM per content.md §3.5 (also the FAQPage JSON-LD source).
+// Phone numbers composed from site.js (never hardcoded).
+const faqs = [
+  {
+    q: 'What is DEF, in one line?',
+    a: 'A 32.5% solution of high-purity urea in demineralised water, injected into diesel exhaust to convert NOx into harmless nitrogen and water vapour.',
+  },
+  {
+    q: 'Is DEF the same thing as AdBlue?',
+    a: "AdBlue® is a brand name — a trademark of the German automotive association VDA, licensed only to audited producers. DEF, AUS 32 and 'urea solution 32.5%' are the generic names for the same category of fluid, defined by ISO 22241 / IS 17042. APEX D.E.F is an independent Indian brand manufactured to that same specification; we are not a VDA licensee and do not sell under the AdBlue name. What matters to your engine is the spec on the label — and we publish ours in full.",
+  },
+  {
+    q: 'Is DEF a fuel additive? Do I mix it with diesel?',
+    a: "No, and never. DEF has its own tank — usually the blue-capped filler. Even a small amount of DEF in diesel (or diesel in DEF) means a service visit. If you cross-fill by mistake, don't start the engine; call your workshop.",
+  },
+  {
+    q: 'How much DEF does my vehicle consume?',
+    a: 'Typically 3–6% of diesel consumption — the working rule is 5 L of DEF per 100 L of diesel for a BS-VI truck. High-load duty (tillage, harvesting, fully-loaded haulage) runs toward 8–10%.',
+  },
+  {
+    q: 'What happens if I run out of DEF on the road?',
+    a: 'The vehicle warns well in advance. Ignore it and the ECU derates — torque and speed are progressively limited until you refill with good DEF. On many vehicles a dry tank plus a restart means limp mode. Keep a sealed 5 or 10 L can aboard.',
+  },
+  {
+    q: 'Does DEF freeze? What about winter?',
+    a: "DEF freezes at −11 °C — rare in most of India outside high-altitude regions. Freezing is harmless: the fluid expands ~7% (packs have headspace for it) and returns to full quality when thawed. Vehicles heat their own DEF tanks; you don't need additives — in fact, anti-freeze additives are contamination.",
+  },
+  {
+    q: "What is DEF's shelf life?",
+    a: 'Temperature decides: 18 months stored under 25 °C, 12 months under 30 °C, 6 months at 35 °C. Practical Indian answer: 12–18 months in a sealed pack, in shade. Check the expiry printed on every APEX pack.',
+  },
+  {
+    q: 'Can I top up DEF with a little tap water?',
+    a: 'No — this is the fastest way to destroy an SCR system. Tap water carries calcium, iron and other minerals that the spec limits to fractions of a ppm because they permanently poison the catalyst. A catalyst replacement costs more than years of DEF. Top up only with in-spec DEF.',
+  },
+  {
+    q: 'What happens if the system overdoses or underdoses DEF?',
+    a: 'Dosing is ECU-controlled, but fluid quality skews it. Under-dosing (or weak, out-of-spec fluid) lets NOx through — OBD flags it and the vehicle can derate. Over-dosing wastes fluid and can cause ammonia slip and white crystal deposits in the exhaust. In-spec concentration (31.8–33.2% urea) is what keeps dosing honest.',
+  },
+  {
+    q: 'How do I know a DEF meets the spec?',
+    a: 'Three checks: (1) the pack — sealed, tamper-evident, batch and expiry printed; (2) the paper — ask for the batch Certificate of Analysis; (3) the mark — since August 2024, DEF sold in India must be certified by BIS to IS 17042 (Part 1) and carry the ISI mark. A workshop refractometer reading between 1.3814–1.3843 confirms concentration in seconds.',
+  },
+  {
+    q: 'Is DEF dangerous to handle?',
+    a: "No. It's non-toxic and non-flammable. Wash skin splashes with water. Rinse spills — dried DEF crystallises and gets slippery, and it can corrode some metals over time. Keep it out of reach of children like any chemical.",
+  },
+  {
+    q: 'Which vehicles and machines in India need DEF?',
+    a: 'BS-VI diesel trucks, buses and many cars/SUVs (since April 2020); tractors above 50 HP under TREM IV (since January 2023) and most combine harvesters; CEV IV construction machines (since October 2021); and new DG sets up to 800 kW under CPCB IV+ (since July 2023). If your machine has a second, blue-capped tank — it needs DEF.',
+  },
+  {
+    q: 'Where can I buy APEX D.E.F? Do you do bulk?',
+    a: `Call or WhatsApp ${phone1.display} / ${phone2.display}. We deliver packed sizes (5 L to 1000 L IBC) to your doorstep and run tanker supply for OEM plants, pumps and institutions — every bulk delivery with its batch COA. No website ordering — a call does it.`,
+  },
+  {
+    q: 'How do I become an APEX D.E.F dealer?',
+    a: `We're appointing dealers and distributors district-by-district. If you have storage, local reach and appetite for a product every new diesel vehicle needs, apply on our Dealers page or WhatsApp 'DEALER' to ${phone1.display}.`,
+  },
+];
+
+// Display variant: FAQ 2 carries its italic footnote (the vetted trademark line).
+const faqsDisplay = faqs.map((f, i) =>
+  i === 1 ? { ...f, a: `${f.a} <em class="faq-note">(Footnote: ${TRADEMARK_FOOTNOTE})</em>` } : f
+);
+
+// Category kickers (design.md §4.5 #faqs): Basics / Usage / Storage / Buying.
+const faqGroups = [
+  { kicker: 'Basics', idx: [0, 1, 2] },
+  { kicker: 'Usage', idx: [3, 4, 8, 11] },
+  { kicker: 'Storage', idx: [5, 6, 7, 10] },
+  { kicker: 'Buying', idx: [9, 12, 13] },
+];
+
+// JSON-LD — content.md §5: FAQPage (all 14, original order) + BreadcrumbList, one @graph.
+const schema = graph(
+  faqPage(faqs),
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'What is DEF?', path: '/what-is-def' },
+  ])
+);
 ---
 
 <BaseLayout
   title="What is DEF (AUS 32)? SCR, Storage & FAQs | APEX D.E.F"
-  description="What is DEF? How SCR converts NOx to nitrogen and water, India&rsquo;s emission-norms timeline, storage and shelf life, plus 14 straight answers on DEF."
+  description="What is DEF? How SCR converts NOx to nitrogen and water, India's emission-norms timeline, storage and shelf life, plus 14 straight answers on DEF."
+  ogTitle="What is DEF? Everything a diesel owner should know."
+  ogDescription="The 32.5% science, the SCR pipeline, the norms timeline and 14 straight answers — no jargon, no fluff."
   path="/what-is-def"
+  schema={schema}
 >
-  <section class="section--dark" style="padding-top: calc(var(--header-h-mobile) + var(--sp-8)); min-height: 60svh;">
-    <div class="container">
+  <!-- #what-is-def — dark page-hero + "DEF, defined." + composition droplet -->
+  <section id="what-is-def" class="section--dark defined" aria-labelledby="page-h">
+    <HexMotif class="defined-hex" />
+    <div class="container defined-inner">
       <p class="overline" data-reveal>Knowledge</p>
-      <h1 class="display-2" style="margin-top: var(--sp-4); max-width: 18ch;" data-reveal>What is DEF? Everything a diesel owner should know.</h1>
+      <h1 class="display-2 defined-h1" id="page-h" data-reveal style="--reveal-delay: 1">
+        What is DEF? Everything a diesel owner should know.
+      </h1>
+      <p class="lead muted defined-intro" data-reveal style="--reveal-delay: 2">
+        Fifteen minutes here saves a derated vehicle, a poisoned catalyst, or a bad purchase. No
+        jargon that isn't explained, no claim without a number.
+      </p>
+
+      <div class="defined-grid">
+        <div class="defined-copy">
+          <h2 class="h3" data-reveal>DEF, defined.</h2>
+          <p class="defined-body" data-reveal style="--reveal-delay: 1">
+            DEF — Diesel Exhaust Fluid, internationally standardised as <strong>AUS 32</strong> —
+            is a solution of exactly 32.5% high-purity automotive-grade urea in 67.5% demineralised
+            water. It is clear, colourless, non-toxic and non-flammable, with a faint ammonia
+            smell. 32.5% isn't arbitrary: it's the eutectic composition, the mix with the lowest
+            and sharpest freezing point (−11 °C), so the fluid behaves predictably in any climate.
+            DEF is <strong>not a fuel additive</strong> — it never touches your diesel. It lives in
+            its own tank (usually blue-capped) and is injected into the exhaust, where it
+            neutralises NOx emissions. Quality is governed worldwide by ISO 22241 and in India by
+            IS 17042, with BIS certification mandatory for manufacturers since August 2024.
+          </p>
+          <ul class="fact-chips" role="list">
+            {factChips.map((chip, i) => (
+              <li class="chip tnum" data-reveal style={`--reveal-delay: ${i + 2}`}>{chip}</li>
+            ))}
+          </ul>
+        </div>
+        <CompositionDroplet />
+      </div>
     </div>
   </section>
-  <!-- Phase 2 fills the remaining sections per content.md -->
+
+  <!-- #scr — the SCR pipeline, 6 authored scenes (static base of the scrollytelling) -->
+  <section id="scr" class="section--dark hairline-top-dark scr cv-auto" aria-labelledby="scr-h">
+    <div class="container">
+      <SectionHeader overline="The Science" heading="How SCR works. Scroll the pipeline." id="scr-h" />
+      <div class="scr-stack" data-scr>
+        {scrSteps.map((step, i) => (
+          <article class="scr-scene" data-scr-scene={i + 1} data-reveal>
+            <div class="scr-caption">
+              <p class="overline scr-step tnum">Step {i + 1} / 6</p>
+              <h3 class="h4">{step.title}</h3>
+              <p class="muted scr-text">{step.caption}</p>
+              {i === 4 && <p class="chip tnum scr-badge">~90% NOx reduction vs BS-IV</p>}
+            </div>
+            <div class="scr-art">
+              <ScrScene scene={(i + 1) as 1 | 2 | 3 | 4 | 5 | 6} />
+            </div>
+          </article>
+        ))}
+      </div>
+      <div class="scr-cta" data-reveal>
+        <a class="btn btn--link" href="/products#spec-table">See the spec we test against →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- #norms-india — 7-milestone timeline as a scroll-snap carousel -->
+  <section id="norms-india" class="section--light norms cv-auto" aria-labelledby="norms-h">
+    <div class="container">
+      <SectionHeader
+        overline="Norms in India"
+        heading="The rules that made DEF essential in India."
+        id="norms-h"
+      />
+    </div>
+    <div class="container norms-clip">
+      <div class="norms-rail" data-norms tabindex="0" aria-label="Emission-norms timeline, 7 milestones — scroll horizontally">
+        <ol class="norms-track" role="list">
+          {norms.map((n, i) => (
+            <li
+              class:list={['norm-card', { 'norm-card--phasing': n.phasing }]}
+              data-norm-node
+              data-reveal
+              style={`--reveal-delay: ${Math.min(i, 4)}`}
+            >
+              <span class="norm-ghost tnum" aria-hidden="true">{n.ghost}</span>
+              <svg class="norm-icon" viewBox="0 0 48 48" width="40" height="40" aria-hidden="true" set:html={n.icon} />
+              <p class:list={['chip', 'norm-year', 'tnum', { 'norm-year--phasing': n.phasing }]}>{n.year}</p>
+              <h3 class="h4 norm-title">{n.title}</h3>
+              <p class="small muted norm-line">{n.line}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+    <div class="norms-dots" data-norms-dots aria-label="Timeline milestones" hidden></div>
+    <div class="container">
+      <p class="small muted norms-foot" data-reveal>
+        TREM V / CEV V schedules are under notification and subject to change; dates above 2026 are
+        indicative.
+      </p>
+      <p class="norms-close" data-reveal style="--reveal-delay: 1">
+        Every norm adds DEF demand. <a href="/dealers">Become a Dealer →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- #storage-handling — shelf-life table, DO/DON'T, callouts -->
+  <section
+    id="storage-handling"
+    class="section--light hairline-top-light storage cv-auto"
+    aria-labelledby="storage-h"
+  >
+    <div class="container">
+      <SectionHeader
+        overline="Shelf Life & Materials"
+        heading="Storage &amp; handling. Where good DEF goes bad."
+        lead="DEF isn't dangerous — but it is delicate. Two things ruin it: heat and contamination. Both are fully preventable."
+        id="storage-h"
+      />
+
+      <div class="shelf-block card-lite" data-reveal>
+        <h3 class="h4 shelf-h">Shelf life <span class="muted shelf-std">(ISO 22241-3)</span></h3>
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th scope="col">Constant storage temperature</th>
+              <th scope="col">Expected shelf life</th>
+            </tr>
+          </thead>
+          <tbody>
+            {shelfRows.map(([temp, life]) => (
+              <tr>
+                <td class="tnum">{temp}</td>
+                <td>{life}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="small muted shelf-foot">
+          Practical Indian rule: 12–18 months in a sealed pack, under 30 °C, away from sunlight.
+          Every APEX pack prints manufacture and expiry dates.
+        </p>
+      </div>
+
+      <div class="dodont-grid">
+        <div class="dodont card-lite" data-reveal>
+          <h3 class="h4 dodont-h dodont-h--do">DO</h3>
+          <ul class="dodont-list" role="list">
+            {storageDos.map((item) => (
+              <li class="dodont-item">
+                <span class="dd-ic dd-ic--do" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+                </span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="dodont card-lite" data-reveal style="--reveal-delay: 1">
+          <h3 class="h4 dodont-h dodont-h--dont">DON'T</h3>
+          <ul class="dodont-list" role="list">
+            {storageDonts.map((item) => (
+              <li class="dodont-item">
+                <span class="dd-ic dd-ic--dont" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div class="note-grid">
+        <div class="note-card note-card--warning" data-reveal>
+          <svg class="note-ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--error-on-light)" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.25"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.5" r="0.5" fill="var(--error-on-light)"/></svg>
+          <h3 class="h4">Contamination warning</h3>
+          <p class="small muted">
+            ppm-level metals kill SCR catalysts — permanently. Keep DEF to dedicated dispensing
+            equipment that touches nothing else, and top up only with in-spec DEF.
+          </p>
+        </div>
+        <div class="note-card" data-reveal style="--reveal-delay: 1">
+          <svg class="note-ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4a2 2 0 1 1 4 0v9.3a4.5 4.5 0 1 1-4 0Z"/><path d="M12 9v7"/><circle cx="12" cy="17.5" r="1.6" fill="var(--def-tint)"/></svg>
+          <h3 class="h4">Freeze note</h3>
+          <p class="small muted">
+            Freezing (−11 °C) is harmless: the fluid expands ~7% (packs have headspace for it) and
+            returns to full quality when thawed.
+          </p>
+        </div>
+        <div class="note-card" data-reveal style="--reveal-delay: 2">
+          <svg class="note-ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5c3 3.7 4.8 6.2 4.8 8.5a4.8 4.8 0 1 1-9.6 0c0-2.3 1.8-4.8 4.8-8.5Z"/><path d="M5 20.5h14" stroke-linecap="round" stroke-dasharray="2.5 3"/></svg>
+          <h3 class="h4">Spill note</h3>
+          <p class="small muted">
+            DEF is non-hazardous and non-flammable. Rinse spills with water; it crystallises
+            slippery when dry and can corrode some metals and concrete over time.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- #faqs — full accordion, 14 Q&As under category kickers -->
+  <section id="faqs" class="section--light hairline-top-light faqs cv-auto" aria-labelledby="faqs-h">
+    <div class="container container--narrow">
+      <SectionHeader overline="FAQs" heading="Fourteen straight answers." id="faqs-h" />
+      {faqGroups.map((group, gi) => (
+        <div class="faq-group">
+          <h3 class="overline faq-kicker" data-reveal style={`--reveal-delay: ${Math.min(gi, 2)}`}>
+            {group.kicker}
+          </h3>
+          <Faq items={group.idx.map((i) => faqsDisplay[i])} />
+        </div>
+      ))}
+      <p class="small muted trademark-foot" data-reveal>{TRADEMARK_FOOTNOTE}</p>
+    </div>
+  </section>
 </BaseLayout>
+
+<script>
+  // #norms-india carousel — progressive enhancement: dots nav + active sync.
+  // Without JS the rail is a plain scroll-snap carousel (complete on its own).
+  const rail = document.querySelector('[data-norms]');
+  const dotsWrap = document.querySelector('[data-norms-dots]');
+  if (rail && dotsWrap && 'IntersectionObserver' in window) {
+    const cards = Array.from(rail.querySelectorAll('[data-norm-node]'));
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    dotsWrap.hidden = false;
+    const dots = cards.map((card, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'norms-dot';
+      b.setAttribute('aria-label', `Go to milestone ${i + 1} of ${cards.length}`);
+      b.addEventListener('click', () => {
+        card.scrollIntoView({
+          behavior: reduce ? 'auto' : 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      });
+      dotsWrap.append(b);
+      return b;
+    });
+    const setActive = (i: number) =>
+      dots.forEach((d, j) => d.setAttribute('aria-current', j === i ? 'true' : 'false'));
+    setActive(0);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(cards.indexOf(entry.target));
+        }
+      },
+      { root: rail, threshold: 0.6 }
+    );
+    cards.forEach((c) => io.observe(c));
+  }
+</script>
+
+<style>
+  section[id] {
+    scroll-margin-top: calc(var(--header-h-mobile) + 12px);
+  }
+
+  /* ---------- #what-is-def ---------- */
+  .defined {
+    position: relative;
+    overflow: hidden;
+    padding-top: calc(var(--header-h-mobile) + var(--sp-9));
+  }
+  @media (min-width: 1024px) {
+    .defined {
+      padding-top: calc(var(--header-h) + var(--sp-9));
+    }
+  }
+  .defined :global(.defined-hex) {
+    position: absolute;
+    top: -40px;
+    right: -60px;
+    width: min(46vw, 560px);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .defined-inner {
+    position: relative;
+  }
+  .defined-h1 {
+    margin-top: var(--sp-4);
+    max-width: 18ch;
+  }
+  .defined-intro {
+    margin-top: var(--sp-5);
+    max-width: 52ch;
+  }
+  .defined-grid {
+    display: grid;
+    gap: var(--sp-8);
+    align-items: center;
+    margin-top: var(--sp-9);
+  }
+  @media (min-width: 1024px) {
+    .defined-grid {
+      grid-template-columns: 7fr 5fr;
+    }
+  }
+  .defined-copy {
+    display: grid;
+    gap: var(--sp-5);
+    justify-items: start;
+  }
+  .defined-body {
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 62ch;
+  }
+  .defined-body strong {
+    color: #fff;
+  }
+  .fact-chips {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+
+  /* ---------- #scr ---------- */
+  .scr-stack {
+    display: grid;
+    gap: var(--sp-8);
+  }
+  .scr-scene {
+    display: grid;
+    gap: var(--sp-5);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .scr-scene {
+      grid-template-columns: 4fr 8fr;
+      gap: var(--sp-8);
+    }
+  }
+  .scr-caption {
+    display: grid;
+    gap: var(--sp-3);
+    justify-items: start;
+  }
+  .scr-step {
+    color: rgba(255, 255, 255, 0.45);
+  }
+  .scr-text {
+    max-width: 44ch;
+  }
+  .scr-badge {
+    margin-top: var(--sp-2);
+  }
+  .scr-art {
+    border: 1px solid var(--hairline-dark);
+    border-radius: var(--r-lg);
+    background: rgba(10, 27, 61, 0.35);
+    padding: clamp(0.75rem, 2.5vw, 1.5rem);
+  }
+  @media (max-width: 899px) {
+    /* Mobile: schematic first, caption under it — reads like a played scene. */
+    .scr-art {
+      order: -1;
+    }
+  }
+  .scr-cta {
+    margin-top: var(--sp-8);
+  }
+  .scr-cta .btn--link {
+    color: var(--def-400);
+  }
+
+  /* ---------- #norms-india ---------- */
+  .norms-clip {
+    padding-inline: 0;
+  }
+  .norms-rail {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 24px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+  }
+  .norms-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .norms-track {
+    list-style: none;
+    margin: 0;
+    display: flex;
+    gap: var(--sp-5);
+    width: max-content;
+    position: relative;
+    padding: 46px 32px 8px;
+  }
+  /* Timeline spine — flowing-liquid line the node dots sit on */
+  .norms-track::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 16px;
+    height: 2px;
+    background: var(--grad-liquid);
+    opacity: 0.9;
+  }
+  .norm-card {
+    position: relative;
+    flex: 0 0 auto;
+    width: min(78vw, 330px);
+    scroll-snap-align: center;
+    background: #fff;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-lg);
+    box-shadow: var(--e-1);
+    padding: var(--sp-6);
+    display: grid;
+    gap: var(--sp-3);
+    align-content: start;
+    justify-items: start;
+  }
+  /* Node dot on the spine */
+  .norm-card::before {
+    content: '';
+    position: absolute;
+    top: -35px;
+    left: 26px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--blue-600);
+    border: 2.5px solid var(--porcelain-50);
+    box-sizing: content-box;
+  }
+  .norm-card--phasing {
+    border-style: dashed;
+  }
+  .norm-card--phasing::before {
+    background: var(--porcelain-50);
+    border: 1.5px dashed var(--blue-600);
+    width: 11px;
+    height: 11px;
+    top: -34px;
+  }
+  .norm-ghost {
+    position: absolute;
+    top: 2px;
+    right: 14px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.75rem, 6vw, 3.75rem);
+    line-height: 1;
+    color: var(--navy-800);
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .norm-year--phasing {
+    border: 1px dashed var(--blue-600);
+    background: transparent;
+  }
+  .norm-title {
+    max-width: 18ch;
+  }
+  .norm-line {
+    max-width: 34ch;
+  }
+  .norms-dots {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin-top: var(--sp-2);
+  }
+  .norms-dots :global(.norms-dot) {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--r-pill);
+  }
+  .norms-dots :global(.norms-dot)::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(10, 27, 61, 0.2);
+    transition: background var(--t-fast), width var(--t-base) var(--ease-out-soft);
+  }
+  .norms-dots :global(.norms-dot[aria-current='true'])::before {
+    width: 22px;
+    background: var(--blue-600);
+  }
+  .norms-foot {
+    margin-top: var(--sp-5);
+    max-width: 60ch;
+  }
+  .norms-close {
+    margin-top: var(--sp-3);
+    font-weight: 600;
+  }
+
+  /* ---------- #storage-handling ---------- */
+  .card-lite {
+    background: #fff;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-lg);
+    padding: var(--sp-6);
+  }
+  .shelf-block {
+    max-width: 640px;
+  }
+  .shelf-h {
+    margin-bottom: var(--sp-4);
+  }
+  .shelf-std {
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+    font-weight: 400;
+  }
+  .shelf-block .spec-table tr:first-child th {
+    border-top: none;
+  }
+  .shelf-foot {
+    margin-top: var(--sp-4);
+    max-width: 52ch;
+  }
+  .dodont-grid {
+    display: grid;
+    gap: var(--sp-5);
+    margin-top: var(--sp-7);
+  }
+  @media (min-width: 900px) {
+    .dodont-grid {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+  .dodont-h {
+    letter-spacing: 0.04em;
+  }
+  .dodont-h--do {
+    color: var(--leaf-500);
+  }
+  .dodont-h--dont {
+    color: var(--error-on-light);
+  }
+  .dodont-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-4) 0 0;
+    display: grid;
+  }
+  .dodont-item {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: var(--sp-3);
+    align-items: start;
+    padding-block: var(--sp-3);
+    color: var(--slate-500);
+    font-size: 0.9375rem;
+  }
+  .dodont-item + .dodont-item {
+    border-top: 1px solid var(--hairline-light);
+  }
+  .dd-ic {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    margin-top: 1px;
+  }
+  .dd-ic--do {
+    background: var(--leaf-tint);
+    color: var(--leaf-500);
+  }
+  .dd-ic--dont {
+    background: rgba(196, 43, 48, 0.1);
+    color: var(--error-on-light);
+  }
+  .note-grid {
+    display: grid;
+    gap: var(--sp-5);
+    margin-top: var(--sp-7);
+  }
+  @media (min-width: 900px) {
+    .note-grid {
+      grid-template-columns: repeat(3, 1fr);
+      align-items: start;
+    }
+  }
+  .note-card {
+    background: #fff;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-md);
+    padding: var(--sp-6) var(--sp-5);
+    display: grid;
+    gap: var(--sp-3);
+    align-content: start;
+  }
+  .note-card--warning {
+    border-color: rgba(196, 43, 48, 0.35);
+    background: rgba(196, 43, 48, 0.03);
+  }
+  .note-card p {
+    max-width: 44ch;
+  }
+
+  /* ---------- #faqs ---------- */
+  .faq-group {
+    margin-top: var(--sp-7);
+  }
+  .faq-group:first-of-type {
+    margin-top: 0;
+  }
+  .faq-kicker {
+    color: var(--blue-600);
+    margin-bottom: var(--sp-3);
+  }
+  .faq-group :global(.faq-note) {
+    display: block;
+    margin-top: var(--sp-3);
+    font-size: var(--fs-small);
+    font-style: italic;
+  }
+  .trademark-foot {
+    margin-top: var(--sp-8);
+    max-width: 70ch;
+  }
+</style>
