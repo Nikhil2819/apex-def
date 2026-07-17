@@ -1,17 +1,1043 @@
 ---
+// Products /products — content.md §3.3, design.md §4.3. Static-first base:
+// the six per-SKU anchor blocks (#def-5l…#def-bulk) ARE the no-JS representation
+// of the #selector; page JS upgrades them into WAI-ARIA tabs with a class-toggle
+// liquid drain/fill transition (instant on html[data-tier='static']).
+// Motion-layer contracts shipped as data attributes:
+//   [data-pack-selector] [data-sku-rail] [data-sku-tab] [data-sku-stage]
+//   [data-sku-visual] [data-sku-panel] (#selector) · [data-liquid-line] (#how-to-buy)
+// Entrances via the global data-reveal IO system.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CtaRow from '../components/CtaRow.astro';
+import Faq from '../components/Faq.astro';
+import PackVisual from '../components/PackVisual.astro';
+import BatchCodeMacro from '../components/products/BatchCodeMacro.astro';
+import HexMotif from '../components/products/HexMotif.astro';
+import { specIntro, specRows, specFootnote } from '../components/products/spec-data.js';
+import { site, skus, waLink } from '../data/site.js';
+import { graph, productSchema, faqPage, breadcrumbs } from '../utils/schema.js';
+
+const primaryPhone = site.phones.find((p) => p.primary) ?? site.phones[0];
+const secondPhone = site.phones.find((p) => !p.primary) ?? site.phones[1];
+
+// Per-SKU blurb / fitment / CTA lines — content.md §3.3 #def-5l…#def-bulk (VERBATIM).
+// Titles, capacity and target buyers come from site.js skus.
+const skuExtras: Record<string, { blurb: string; fitment: string; ctaLine: string | null }> = {
+  'def-5l': {
+    blurb:
+      'The keep-one-anyway pack. Fits behind a seat or in a car boot, and saves a stranded, derated journey.',
+    fitment:
+      'Pour with a dedicated DEF funnel only. Store sealed, out of sunlight. If frozen (below −11 °C), thaw fully before use; quality is unaffected.',
+    ctaLine: 'Call for price — single cans available via dealers and retail counters.',
+  },
+  'def-10l': {
+    blurb:
+      "A season-smart size for the single-tractor or single-truck owner. Roughly 200 litres of diesel worth of running per can at typical dosing.",
+    fitment:
+      'Two-hand pour; use a dedicated DEF funnel only. Reseal after every top-up — open containers absorb dust and lose water.',
+    ctaLine: 'Call for price and village/workshop delivery options.',
+  },
+  'def-20l': {
+    blurb:
+      'Our proven workhorse pack. The size workshops standardise on: enough for a harvest week or ~400 L of diesel worth of truck running.',
+    fitment:
+      'Tamper-evident lid; batch and expiry printed on the pack. Decant with dedicated DEF equipment only — never a diesel funnel.',
+    ctaLine: 'Call for price — carton and pallet quantities available.',
+  },
+  'def-210l': {
+    blurb:
+      'The fleet-yard staple. One drum covers roughly 12,500 km of BS-VI truck running — a month of duty for many operators.',
+    fitment:
+      'HDPE drum with 2-inch bung; dispense with a dedicated DEF drum pump (SS304/316 or polypropylene wetted parts). Keep bunged when not in use; store under shade.',
+    ctaLine: 'Call for price — ask about scheduled drops.',
+  },
+  'def-1000l': {
+    blurb:
+      'Depot-scale DEF with dispensing discipline built in. The right unit for operations consuming 1,000 litres a month or more.',
+    fitment:
+      'HDPE tote in steel cage; bottom valve suits gravity or pump dispensing. Pair with an auto shut-off DEF nozzle. Keep out of direct sun — tote walls pass UV.',
+    ctaLine: 'Call for price — ask about refill scheduling.',
+  },
+  'def-bulk': {
+    blurb:
+      'Loose supply straight from the plant into your storage — for OEM plants, fuel-pump DEF dispensers and institutional buyers. Every delivery carries its batch Certificate of Analysis.',
+    fitment:
+      'Receiving tank must be HDPE, FRP or SS304/316 with dedicated lines — no copper, brass, zinc, aluminium or mild steel anywhere in the circuit. We can advise on storage setup before first delivery.',
+    ctaLine: null, // rendered inline with a tel: link from site.js (phone never hardcoded)
+  },
+};
+
+const DEFAULT_SKU = 'def-20l';
+
+// Family lineup — scale-suggestive widths, 5 L can → tanker.
+const lineupWidths: Record<string, number> = {
+  'def-5l': 84,
+  'def-10l': 100,
+  'def-20l': 118,
+  'def-210l': 142,
+  'def-1000l': 180,
+  'def-bulk': 238,
+};
+
+// #faq-products — content.md §3.3 (VERBATIM); also the FAQPage JSON-LD source.
+const productFaqs = [
+  {
+    q: 'Is the fluid different between the 5 L can and the tanker?',
+    a: 'No. Every pack is filled from the same lab-cleared batch stock, to the same ISO 22241-1 / IS 17042 spec. Packs differ only in size, closure and handling.',
+  },
+  {
+    q: 'Is there a minimum order quantity?',
+    a: "For direct factory supply we serve workshop-scale orders upward; single cans are available through dealers and retail counters. Tell us what you need — we'll route it sensibly.",
+  },
+  {
+    q: 'Do I get a Certificate of Analysis?',
+    a: 'Yes — every batch is documented. COAs accompany bulk deliveries by default and are available on request for any packed order.',
+  },
+  {
+    q: 'My pack froze in the hills. Is it spoiled?',
+    a: 'No. DEF freezes at −11 °C and thaws with zero quality loss. Packs are filled with headspace for the ~7% expansion. Thaw fully and shake gently before use.',
+  },
+  {
+    q: 'How do I verify I got genuine APEX D.E.F?',
+    a: "Check three things: the tamper-evident seal is intact, the batch number and expiry are printed (not stickered), and the fluid is clear and colourless. When in doubt, WhatsApp us the batch number — we'll confirm it against our lab register.",
+  },
+];
+
+// #packaging-quality feature cards — titles = the content.md feature chips; lines
+// are fragments of the verbatim section body.
+const pkgCards = [
+  {
+    title: 'HDPE',
+    line: 'One of the few materials DEF can live in indefinitely.',
+    icon:
+      '<rect x="10" y="14" width="28" height="26" rx="6" fill="var(--def-tint)"/>' +
+      '<path d="M17 20h14a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3V23a3 3 0 0 1 3-3Z" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '<path d="M20 20v-4h8v4" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '<path d="M24 25.5c1.9 2.4 2.9 3.9 2.9 5.2a2.9 2.9 0 1 1-5.8 0c0-1.3 1-2.8 2.9-5.2Z" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"/>',
+  },
+  {
+    title: 'Tamper-evident cap',
+    line: "So you know it wasn't opened, topped or swapped.",
+    icon:
+      '<rect x="10" y="10" width="28" height="18" rx="5" fill="var(--def-tint)"/>' +
+      '<rect x="13" y="14" width="22" height="12" rx="3" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+      '<path d="M13 30h22" stroke="var(--blue-600)" stroke-width="1.5" stroke-dasharray="3 3" stroke-linecap="round"/>' +
+      '<path d="m18 36 4 4 8-8" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
+  {
+    title: 'Batch + expiry printed',
+    line: 'Printed on every unit, so you can check age before you pour.',
+    icon:
+      '<rect x="10" y="13" width="28" height="24" rx="4" fill="var(--def-tint)"/>' +
+      '<rect x="13" y="16" width="22" height="18" rx="3" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/>' +
+      '<path d="M17 22h14" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<path d="M17 27h10" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 3"/>' +
+      '<path d="M17 31h7" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 3"/>',
+  },
+];
+
+const pkgChips = ['HDPE', 'Tamper-evident cap', 'Batch + expiry printed', 'UV-shielded storage advice on pack'];
+
+// #how-to-buy — content.md §3.3 (step 1 copy is composed from site.js phones).
+const buySteps = [
+  {
+    title: 'Call or WhatsApp',
+    tail: " Tell us your pack size — or your vehicles and monthly diesel, and we'll size it.",
+    phones: true,
+  },
+  {
+    title: 'Confirm quantity & location',
+    tail: "We confirm stock, today's price and delivery to your district, with GST invoice to your firm.",
+    phones: false,
+  },
+  {
+    title: 'Doorstep delivery',
+    tail: 'Most orders arrive same-day or next-day; 48 hours at the outside. Bulk deliveries include the batch COA.',
+    phones: false,
+  },
+];
+
+// JSON-LD — content.md §5: Product (no offers) + FAQPage + BreadcrumbList, one @graph.
+const schema = graph(
+  productSchema(),
+  faqPage(productFaqs),
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Products', path: '/products' },
+  ])
+);
 ---
 
 <BaseLayout
   title="DEF Packs 5 L to Bulk | ISO 22241 Spec | APEX D.E.F"
   description="One ISO 22241 / IS 17042 fluid, six packs: 5 L, 10 L, 20 L, 210 L drum, 1000 L IBC, bulk tanker. Full published spec table. Call or WhatsApp for supply."
+  ogTitle="One fluid. Six packs. The full spec, published."
+  ogDescription="From a 5 L can to tanker supply — the same certified DEF, batch-tested and dated. See the complete ISO 22241-1 table."
   path="/products"
+  schema={schema}
 >
-  <section class="section--dark" style="padding-top: calc(var(--header-h-mobile) + var(--sp-8)); min-height: 60svh;">
+  <!-- #overview — dark page-hero + family lineup strip -->
+  <section id="overview" class="section--dark overview" aria-labelledby="overview-h">
+    <HexMotif class="overview-hex" />
     <div class="container">
       <p class="overline" data-reveal>Products</p>
-      <h1 class="display-2" style="margin-top: var(--sp-4); max-width: 18ch;" data-reveal>One fluid. Six packs.</h1>
+      <h1 class="display-2" id="overview-h" data-reveal style="--reveal-delay: 1">
+        One fluid. Six packs.
+      </h1>
+      <p class="lead muted overview-body" data-reveal style="--reveal-delay: 2">
+        Everything on this page holds the same certified fluid — 32.5% automotive-grade urea in
+        demineralised water, tested per batch to ISO 22241-1 / IS 17042. The only choice you make
+        is the pack: from a 5 L can behind the tractor seat to a tanker feeding your depot. No
+        prices are listed on this site — call or WhatsApp for today's rate and delivery to your
+        district.
+      </p>
+      <ul class="overview-chips" data-reveal style="--reveal-delay: 3">
+        <li class="chip">Same spec in every pack</li>
+        <li class="chip">Batch + expiry printed</li>
+        <li class="chip">COA on request</li>
+      </ul>
+
+      <ul class="lineup" aria-label="The APEX D.E.F pack family — jump to a pack">
+        {skus.map((s, i) => (
+          <li class="lineup-item" data-reveal style={`--w: ${lineupWidths[s.id]}px; --reveal-delay: ${4 + i}`}>
+            <a href={`#${s.id}`}>
+              <PackVisual sku={s.id} />
+              <span class="lineup-name">{s.pack}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   </section>
-  <!-- Phase 2 fills the remaining sections per content.md -->
+
+  <!-- #selector — SIGNATURE: progressive pack selector.
+       No-JS: the six [data-sku-panel] blocks below render stacked as the per-SKU
+       anchors. JS upgrades to tabs (rail + stage + one visible panel). -->
+  <section id="selector" class="section--light selector-sec" aria-labelledby="selector-h">
+    <div class="container">
+      <h2 class="display-2 selector-head" id="selector-h" data-reveal>Pick your pack.</h2>
+
+      <div class="pack-selector" data-pack-selector>
+        <div class="rail-col" data-sku-rail-wrap hidden>
+          <p class="overline rail-label" id="selector-rail-label">Pack size</p>
+          <div class="selector-rail" role="tablist" aria-labelledby="selector-rail-label" data-sku-rail>
+            {skus.map((s) => (
+              <button
+                type="button"
+                class="sku-tab"
+                role="tab"
+                id={`tab-${s.id}`}
+                data-sku-tab={s.id}
+                aria-controls={s.id}
+                aria-selected={s.id === DEFAULT_SKU ? 'true' : 'false'}
+                tabindex={s.id === DEFAULT_SKU ? 0 : -1}
+              >
+                <span class="tab-thumb" aria-hidden="true">
+                  <PackVisual sku={s.id} label={false} size="26px" />
+                </span>
+                {s.pack}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div class="selector-stage" data-sku-stage aria-hidden="true" hidden>
+          <div class="stage-spot"></div>
+          {skus.map((s) => (
+            <div class="stage-pack" data-sku-visual={s.id}>
+              <PackVisual sku={s.id} />
+            </div>
+          ))}
+        </div>
+
+        <div class="selector-panels">
+          {skus.map((s) => (
+            <article class="sku-panel" id={s.id} data-sku-panel={s.id}>
+              <div class="sku-media">
+                <PackVisual sku={s.id} size="min(52vw, 280px)" />
+              </div>
+              <div class="sku-info">
+                <h3 class="h3">{s.title}</h3>
+                <p class="sku-blurb muted">{skuExtras[s.id].blurb}</p>
+                <dl class="sku-rows">
+                  <div class="sku-row">
+                    <dt class="overline">Capacity</dt>
+                    <dd class="tnum">{s.capacity}</dd>
+                  </div>
+                  <div class="sku-row">
+                    <dt class="overline">Best for</dt>
+                    <dd>{s.bestFor}</dd>
+                  </div>
+                  <div class="sku-row">
+                    <dt class="overline">Fitment &amp; handling</dt>
+                    <dd>{skuExtras[s.id].fitment}</dd>
+                  </div>
+                </dl>
+                <p class="sku-cta-line">
+                  {s.id === 'def-bulk' ? (
+                    <>
+                      Call <a class="tnum" href={`tel:${primaryPhone.tel}`}>{primaryPhone.display}</a> for
+                      tanker scheduling and supply agreements.
+                    </>
+                  ) : (
+                    skuExtras[s.id].ctaLine
+                  )}
+                </p>
+                <CtaRow theme="light" pack={s.pack} />
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <p class="selector-helper small">
+        Not sure? Tell us your vehicle count and monthly diesel use on
+        <a href={waLink()} target="_blank" rel="noopener">WhatsApp</a> — we'll size it for you.
+      </p>
+    </div>
+  </section>
+
+  <!-- #spec-table — the full 18-parameter table -->
+  <section id="spec-table" class="section--dark spec-sec cv-auto" aria-labelledby="spec-h">
+    <HexMotif class="spec-hex" />
+    <div class="container">
+      <h2 class="display-2" id="spec-h" data-reveal>The specification. In full.</h2>
+      <p class="lead muted spec-intro" data-reveal style="--reveal-delay: 1">{specIntro}</p>
+
+      <div class="table-scroll" data-reveal style="--reveal-delay: 2">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th scope="col">Parameter</th>
+              <th scope="col">Unit</th>
+              <th scope="col" class="num">Limit</th>
+              <th scope="col">Test method</th>
+            </tr>
+          </thead>
+          <tbody>
+            {specRows.map((row) => (
+              <tr>
+                <td>{row.parameter}</td>
+                <td class="unit">{row.unit}</td>
+                <td class="num tnum">{row.limit}</td>
+                <td class="method">{row.method}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="spec-note small" data-reveal>{specFootnote}</p>
+      <div class="spec-cta" data-reveal style="--reveal-delay: 1">
+        <a class="btn btn--secondary-dark" href="/def-datasheet">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>
+          View Datasheet (print/save as PDF)
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- #packaging-quality — 3 feature cards + batch-code macro vector -->
+  <section id="packaging-quality" class="section--light cv-auto" aria-labelledby="pkg-h">
+    <div class="container">
+      <h2 class="display-2" id="pkg-h" data-reveal>The pack protects the spec.</h2>
+      <p class="pkg-body muted" data-reveal style="--reveal-delay: 1">
+        DEF that leaves the plant perfect can still be ruined by the wrong container. Every APEX
+        pack is HDPE — one of the few materials DEF can live in indefinitely — with tamper-evident
+        closures so you know it wasn't opened, topped or swapped. Batch number, date of manufacture
+        and expiry are printed on every unit, so you can check age before you pour. Store packs
+        sealed, under 30 °C and out of sunlight, and the fluid inside stays in spec for 12–18
+        months.
+      </p>
+      <ul class="pkg-chips" data-reveal style="--reveal-delay: 2">
+        {pkgChips.map((chip) => (
+          <li class="chip">{chip}</li>
+        ))}
+      </ul>
+
+      <div class="pkg-cards">
+        {pkgCards.map((card, i) => (
+          <article class="card-light pkg-card" data-reveal style={`--reveal-delay: ${i + 1}`}>
+            <svg viewBox="0 0 48 48" aria-hidden="true" set:html={card.icon} />
+            <h3 class="h4">{card.title}</h3>
+            <p class="muted">{card.line}</p>
+          </article>
+        ))}
+      </div>
+
+      <figure class="pkg-figure" data-reveal>
+        <BatchCodeMacro />
+        <figcaption class="small muted">
+          Batch code, manufacture and expiry printing on the 20 L bucket
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- #how-to-buy — light→dark gradient band, 3 steps on a liquid line -->
+  <section id="how-to-buy" class="section--dark how-to-buy hairline-top-light cv-auto" aria-labelledby="buy-h">
+    <div class="container">
+      <h2 class="display-2 buy-head" id="buy-h" data-reveal>
+        Buying takes three steps. None of them is a website.
+      </h2>
+
+      <ol class="steps">
+        <svg class="steps-line steps-line--h" data-liquid-line viewBox="0 0 1200 24" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="buy-grad-h" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#2FB6E9"></stop>
+              <stop offset="0.7" stop-color="#1B4F9C"></stop>
+              <stop offset="1" stop-color="#1B4F9C" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <path
+            d="M0 12C100 2 200 22 300 12S500 2 600 12 800 22 900 12 1100 2 1200 12"
+            fill="none"
+            stroke="url(#buy-grad-h)"
+            stroke-width="2"
+            vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <svg class="steps-line steps-line--v" data-liquid-line viewBox="0 0 24 600" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="buy-grad-v" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2FB6E9"></stop>
+              <stop offset="0.7" stop-color="#1B4F9C"></stop>
+              <stop offset="1" stop-color="#1B4F9C" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <path
+            d="M12 0C2 100 22 200 12 300S2 500 12 600"
+            fill="none"
+            stroke="url(#buy-grad-v)"
+            stroke-width="2"
+            vector-effect="non-scaling-stroke"></path>
+        </svg>
+
+        {buySteps.map((step, i) => (
+          <li class="step" data-reveal style={`--reveal-delay: ${i + 1}`}>
+            <span class="step-num tnum" aria-hidden="true">{i + 1}</span>
+            <div class="step-body">
+              <h3 class="h4">{step.title}</h3>
+              <p class="muted">
+                {step.phones ? (
+                  <>
+                    <a class="tnum" href={`tel:${primaryPhone.tel}`}>{primaryPhone.display}</a> or{' '}
+                    <a class="tnum" href={`tel:${secondPhone.tel}`}>{secondPhone.display}</a>.
+                    {step.tail}
+                  </>
+                ) : (
+                  step.tail
+                )}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <p class="steps-close muted" data-reveal>
+        No portals, no order forms. A phone call and it's on its way.
+      </p>
+      <div class="buy-cta" data-reveal style="--reveal-delay: 1">
+        <CtaRow theme="dark" />
+      </div>
+    </div>
+  </section>
+
+  <!-- #faq-products — 5 product Q&As -->
+  <section id="faq-products" class="section--light cv-auto" aria-labelledby="faq-products-h">
+    <div class="container container--narrow">
+      <h2 id="faq-products-h" class="visually-hidden">Product FAQs</h2>
+      <div data-reveal>
+        <Faq items={productFaqs} />
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<script>
+  // #selector progressive tabs — WAI-ARIA tabs pattern with automatic activation,
+  // hash deep-links (#def-210l preselects; hashchange re-selects), swipe on the
+  // stage. The liquid drain/fill transition is pure CSS class-toggle; the tier
+  // stylesheet makes it instant on html[data-tier='static'].
+  const root = document.querySelector('[data-pack-selector]');
+  if (root) {
+    const railWrap = root.querySelector('[data-sku-rail-wrap]');
+    const rail = root.querySelector('[data-sku-rail]');
+    const stage = root.querySelector('[data-sku-stage]');
+    const tabs = Array.from(root.querySelectorAll('[data-sku-tab]'));
+    const panels = Array.from(root.querySelectorAll('[data-sku-panel]'));
+    const visuals = Array.from(root.querySelectorAll('[data-sku-visual]'));
+    const ids = tabs.map((t) => t.dataset.skuTab);
+    const section = document.getElementById('selector');
+    let current = '';
+
+    const centreTab = (tab) => {
+      if (rail.scrollWidth <= rail.clientWidth + 1) return;
+      rail.scrollTo({
+        left: tab.offsetLeft - (rail.clientWidth - tab.offsetWidth) / 2,
+        behavior: 'smooth',
+      });
+    };
+
+    const select = (id, { focusTab = false, updateHash = true } = {}) => {
+      if (!ids.includes(id) || id === current) return;
+      current = id;
+      tabs.forEach((tab) => {
+        const active = tab.dataset.skuTab === id;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if (active) {
+          if (focusTab) tab.focus({ preventScroll: true });
+          centreTab(tab);
+        }
+      });
+      visuals.forEach((v) => v.classList.toggle('is-active', v.dataset.skuVisual === id));
+      panels.forEach((p) => {
+        p.hidden = p.dataset.skuPanel !== id;
+      });
+      if (updateHash) history.replaceState(null, '', `#${id}`);
+    };
+
+    // Upgrade to tabs mode
+    root.classList.add('is-tabs');
+    railWrap.hidden = false;
+    stage.hidden = false;
+    panels.forEach((p) => {
+      p.setAttribute('role', 'tabpanel');
+      p.setAttribute('aria-labelledby', `tab-${p.dataset.skuPanel}`);
+    });
+
+    const hashSku = location.hash.slice(1);
+    const fromHash = ids.includes(hashSku);
+    select(fromHash ? hashSku : 'def-20l', { updateHash: false });
+    if (fromHash) requestAnimationFrame(() => section && section.scrollIntoView());
+
+    rail.addEventListener('click', (e) => {
+      const tab = e.target.closest('[data-sku-tab]');
+      if (tab) select(tab.dataset.skuTab);
+    });
+
+    rail.addEventListener('keydown', (e) => {
+      const i = ids.indexOf(current);
+      let next = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = ids[(i + 1) % ids.length];
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = ids[(i - 1 + ids.length) % ids.length];
+      else if (e.key === 'Home') next = ids[0];
+      else if (e.key === 'End') next = ids[ids.length - 1];
+      if (next) {
+        e.preventDefault();
+        select(next, { focusTab: true });
+      }
+    });
+
+    // Swipe left/right on the visual also switches SKU (design.md §4.3)
+    let touchX = 0;
+    stage.addEventListener(
+      'touchstart',
+      (e) => {
+        touchX = e.changedTouches[0].clientX;
+      },
+      { passive: true }
+    );
+    stage.addEventListener(
+      'touchend',
+      (e) => {
+        const dx = e.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) < 48) return;
+        const i = ids.indexOf(current);
+        const next = dx < 0 ? Math.min(i + 1, ids.length - 1) : Math.max(i - 1, 0);
+        select(ids[next]);
+      },
+      { passive: true }
+    );
+
+    // Footer/lineup links like /products#def-210l while already on the page
+    addEventListener('hashchange', () => {
+      const id = location.hash.slice(1);
+      if (ids.includes(id)) {
+        select(id, { updateHash: false });
+        if (section) section.scrollIntoView();
+      }
+    });
+  }
+</script>
+
+<style>
+  section[id] {
+    scroll-margin-top: calc(var(--header-h-mobile) + 12px);
+  }
+
+  /* ---------- #overview ---------- */
+  .overview {
+    position: relative;
+    overflow: hidden;
+    padding-top: calc(var(--header-h-mobile) + var(--sp-8));
+  }
+  @media (min-width: 1024px) {
+    .overview {
+      padding-top: calc(var(--header-h) + var(--sp-8));
+    }
+  }
+  .overview-hex {
+    position: absolute;
+    top: -50px;
+    right: -70px;
+    width: min(46vw, 460px);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .overview .container {
+    position: relative;
+  }
+  .overview h1 {
+    margin-top: var(--sp-4);
+    max-width: 14ch;
+  }
+  .overview-body {
+    margin-top: var(--sp-5);
+    max-width: 62ch;
+  }
+  .overview-chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin: var(--sp-6) 0 0;
+    padding: 0;
+  }
+  .lineup {
+    list-style: none;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--sp-5);
+    margin: var(--sp-8) 0 0;
+    padding: 0 0 var(--sp-3);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  .lineup-item {
+    flex: 0 0 var(--w);
+    scroll-snap-align: center;
+  }
+  .lineup-item a {
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-3);
+    text-decoration: none;
+  }
+  .lineup-name {
+    font-size: var(--fs-overline);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+    transition: color var(--t-fast);
+  }
+  .lineup-item a:hover .lineup-name,
+  .lineup-item a:focus-visible .lineup-name {
+    color: var(--def-400);
+  }
+  @media (min-width: 1024px) {
+    .lineup {
+      overflow: visible;
+      justify-content: space-between;
+      gap: var(--sp-4);
+    }
+  }
+
+  /* ---------- #selector — shared ---------- */
+  .selector-head {
+    margin-bottom: var(--sp-7);
+  }
+  .sku-info h3 {
+    margin: 0;
+  }
+  .sku-blurb {
+    margin-top: var(--sp-3);
+    max-width: 55ch;
+  }
+  .sku-rows {
+    margin: var(--sp-5) 0 0;
+  }
+  .sku-row {
+    display: grid;
+    gap: var(--sp-1);
+    padding-block: var(--sp-3);
+    border-top: 1px solid var(--hairline-light);
+  }
+  @media (min-width: 480px) {
+    .sku-row {
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: var(--sp-4);
+    }
+  }
+  .sku-row dd {
+    margin: 0;
+  }
+  .sku-cta-line {
+    margin-top: var(--sp-5);
+    color: var(--slate-500);
+    font-weight: 500;
+  }
+  .sku-info :global(.cta-row) {
+    margin-top: var(--sp-4);
+  }
+  .sku-media {
+    display: grid;
+    place-items: center;
+    background: #fff;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-lg);
+    padding: var(--sp-7) var(--sp-6);
+  }
+  .selector-helper {
+    margin-top: var(--sp-6);
+    color: var(--slate-500);
+    max-width: 60ch;
+  }
+
+  /* ---------- #selector — stacked (no-JS / anchor) representation ---------- */
+  .pack-selector:not(.is-tabs) .sku-panel {
+    display: grid;
+    gap: var(--sp-6);
+    padding-block: var(--sp-8);
+    border-top: 1px solid var(--hairline-light);
+  }
+  @media (min-width: 768px) {
+    .pack-selector:not(.is-tabs) .sku-panel {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--sp-8);
+      align-items: center;
+    }
+    .pack-selector:not(.is-tabs) .sku-panel:nth-of-type(even) .sku-media {
+      order: 2;
+    }
+  }
+  .sku-panel {
+    scroll-margin-top: calc(var(--header-h-mobile) + 12px);
+  }
+
+  /* ---------- #selector — tabs mode (JS upgrade) ---------- */
+  .pack-selector.is-tabs {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .pack-selector.is-tabs {
+      grid-template-columns: 236px minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: var(--sp-7);
+      align-items: center;
+    }
+  }
+  .rail-label {
+    margin-bottom: var(--sp-3);
+  }
+  .is-tabs .selector-rail {
+    display: flex;
+    gap: var(--sp-2);
+  }
+  @media (max-width: 1023.98px) {
+    .is-tabs .selector-rail {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: var(--sp-2);
+      scroll-snap-type: x proximity;
+    }
+  }
+  @media (min-width: 1024px) {
+    .is-tabs .selector-rail {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+  .sku-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 8px 18px 8px 10px;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-pill);
+    background: #fff;
+    color: var(--ink-900);
+    font-weight: 600;
+    font-size: var(--fs-small);
+    white-space: nowrap;
+    scroll-snap-align: center;
+    transition:
+      background var(--t-fast),
+      border-color var(--t-fast),
+      color var(--t-fast),
+      box-shadow var(--t-base);
+  }
+  .sku-tab:hover {
+    border-color: var(--blue-600);
+  }
+  .sku-tab[aria-selected='true'] {
+    background: var(--blue-600);
+    border-color: var(--blue-600);
+    color: #fff;
+    box-shadow: var(--e-2);
+  }
+  .tab-thumb {
+    width: 34px;
+    height: 40px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    background: var(--porcelain-50);
+    border-radius: var(--r-sm);
+    transition: background var(--t-fast);
+  }
+  .sku-tab[aria-selected='true'] .tab-thumb {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .is-tabs .selector-stage {
+    display: grid;
+    place-items: center;
+    position: relative;
+    padding-block: var(--sp-5);
+  }
+  .is-tabs .stage-spot {
+    position: absolute;
+    inset: -6% -18%;
+    background: radial-gradient(closest-side at 50% 55%, #fff 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+  }
+  .is-tabs .stage-pack {
+    grid-area: 1 / 1;
+    position: relative;
+    width: min(60vw, 320px);
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 0.6s var(--ease-inout);
+  }
+  @media (min-width: 1024px) {
+    .is-tabs .stage-pack {
+      width: min(100%, 360px);
+    }
+  }
+  .is-tabs .stage-pack.is-active {
+    clip-path: inset(0 0 0 0);
+  }
+  :global(html[data-tier='static']) .is-tabs .stage-pack {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .is-tabs .stage-pack {
+      transition: none;
+    }
+  }
+
+  .is-tabs .sku-panel {
+    display: block;
+  }
+  .is-tabs .sku-panel[hidden] {
+    display: none;
+  }
+  .is-tabs .sku-media {
+    display: none;
+  }
+  :global(html[data-tier='full']) .is-tabs .sku-panel:not([hidden]) .sku-info,
+  :global(html[data-tier='lite']) .is-tabs .sku-panel:not([hidden]) .sku-info {
+    animation: panel-in 0.45s var(--ease-out) 0.15s both;
+  }
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ---------- #spec-table ---------- */
+  .spec-sec {
+    position: relative;
+    overflow: hidden;
+  }
+  .spec-hex {
+    position: absolute;
+    bottom: -60px;
+    right: -70px;
+    width: min(44vw, 440px);
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .spec-sec .container {
+    position: relative;
+  }
+  .spec-intro {
+    margin-top: var(--sp-4);
+    max-width: 58ch;
+  }
+  .spec-sec .table-scroll {
+    margin-top: var(--sp-7);
+  }
+  .spec-sec .spec-table {
+    min-width: 640px;
+  }
+  .spec-sec .spec-table thead th {
+    color: rgba(255, 255, 255, 0.64);
+  }
+  .spec-sec .spec-table td.unit {
+    color: rgba(255, 255, 255, 0.64);
+  }
+  .spec-sec .spec-table td.method {
+    text-align: left;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--fs-small);
+  }
+  .spec-sec .spec-table th.num {
+    text-align: right;
+  }
+  .spec-note {
+    margin-top: var(--sp-4);
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 70ch;
+  }
+  .spec-cta {
+    margin-top: var(--sp-6);
+  }
+
+  /* ---------- #packaging-quality ---------- */
+  .pkg-body {
+    margin-top: var(--sp-5);
+    max-width: 65ch;
+  }
+  .pkg-chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin: var(--sp-5) 0 0;
+    padding: 0;
+  }
+  .pkg-cards {
+    display: grid;
+    gap: var(--sp-5);
+    margin-top: var(--sp-7);
+  }
+  @media (min-width: 768px) {
+    .pkg-cards {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .pkg-card {
+    padding: var(--sp-6);
+    display: grid;
+    gap: var(--sp-3);
+    align-content: start;
+  }
+  .pkg-card svg {
+    width: 40px;
+    height: 40px;
+  }
+  .pkg-card h3 {
+    margin: 0;
+  }
+  .pkg-figure {
+    margin: var(--sp-7) 0 0;
+  }
+  .pkg-figure figcaption {
+    margin-top: var(--sp-3);
+  }
+
+  /* ---------- #how-to-buy ---------- */
+  section.how-to-buy {
+    background: linear-gradient(
+      180deg,
+      var(--porcelain-50) 0%,
+      #55688a 10%,
+      var(--navy-800) 20%,
+      var(--ink-950) 70%
+    );
+    padding-top: calc(var(--section-pad-dark) + 3rem);
+  }
+  .buy-head {
+    max-width: 22ch;
+  }
+  .steps {
+    list-style: none;
+    position: relative;
+    display: grid;
+    gap: var(--sp-7);
+    margin: var(--sp-8) 0 0;
+    padding: 0;
+  }
+  @media (min-width: 768px) {
+    .steps {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-6);
+    }
+  }
+  .steps-line {
+    position: absolute;
+    pointer-events: none;
+  }
+  .steps-line--h {
+    display: none;
+  }
+  .steps-line--v {
+    top: 0;
+    left: 12px;
+    width: 24px;
+    height: 100%;
+  }
+  @media (min-width: 768px) {
+    .steps-line--h {
+      display: block;
+      top: 24px;
+      left: 2%;
+      width: 96%;
+      height: 24px;
+    }
+    .steps-line--v {
+      display: none;
+    }
+  }
+  .step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: var(--sp-4);
+    align-items: start;
+  }
+  @media (min-width: 768px) {
+    .step {
+      grid-template-columns: 1fr;
+    }
+  }
+  .step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid var(--def-400);
+    color: var(--def-400);
+    background: var(--ink-950);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    position: relative;
+  }
+  .step-body h3 {
+    margin: 0 0 var(--sp-2);
+  }
+  .step-body p {
+    max-width: 38ch;
+  }
+  .steps-close {
+    margin-top: var(--sp-7);
+  }
+  .buy-cta {
+    margin-top: var(--sp-5);
+  }
+</style>

@@ -1,0 +1,98 @@
+---
+// Composition droplet diagram — design.md §4.5 #what-is-def.
+// Big droplet outline holding two liquid layers (32.5% urea / 67.5% demin water)
+// with hairline callouts. CSS fill-rise animation on entry (full/lite tiers,
+// keyed to the global .is-revealed reveal); static tier and no-JS render pre-filled.
+---
+
+<figure class="comp-art" data-reveal style="--reveal-delay: 2">
+  <svg
+    class="comp-svg"
+    viewBox="0 0 500 410"
+    role="img"
+    aria-label="Diagram: DEF composition — 32.5% automotive-grade urea and 67.5% demineralised water shown as two liquid layers inside a droplet"
+  >
+    <defs>
+      <clipPath id="comp-clip">
+        <path d="M180 22C180 22 300 158 300 252C300 330 246 382 180 382C114 382 60 330 60 252C60 158 180 22 180 22Z" />
+      </clipPath>
+      <linearGradient id="comp-urea" gradientUnits="userSpaceOnUse" x1="0" y1="140" x2="0" y2="217">
+        <stop offset="0" stop-color="#2FB6E9" />
+        <stop offset="1" stop-color="#1670C0" />
+      </linearGradient>
+      <linearGradient id="comp-water" gradientUnits="userSpaceOnUse" x1="0" y1="217" x2="0" y2="385">
+        <stop offset="0" stop-color="#1B4F9C" />
+        <stop offset="1" stop-color="#0A1B3D" />
+      </linearGradient>
+    </defs>
+
+    <!-- floor glow -->
+    <ellipse cx="180" cy="396" rx="70" ry="7" fill="rgba(47,182,233,0.10)" />
+
+    <!-- liquid layers (clipped to droplet; group rises on entry) -->
+    <g clip-path="url(#comp-clip)">
+      <g class="comp-liquid">
+        <rect x="56" y="217" width="248" height="168" fill="url(#comp-water)" />
+        <rect x="56" y="140" width="248" height="77" fill="url(#comp-urea)" />
+        <path d="M68 217H292" stroke="rgba(255,255,255,0.30)" stroke-width="1" stroke-dasharray="4 5" />
+        <path d="M100 140H260" stroke="rgba(255,255,255,0.40)" stroke-width="1.5" />
+      </g>
+      <ellipse cx="122" cy="256" rx="14" ry="36" fill="rgba(255,255,255,0.08)" transform="rotate(16 122 256)" />
+    </g>
+
+    <!-- droplet outline -->
+    <path
+      d="M180 22C180 22 300 158 300 252C300 330 246 382 180 382C114 382 60 330 60 252C60 158 180 22 180 22Z"
+      fill="none"
+      stroke="#2FB6E9"
+      stroke-width="1.5"
+    />
+
+    <!-- hairline callouts -->
+    <g class="comp-callouts">
+      <circle cx="266" cy="176" r="2" fill="#2FB6E9" />
+      <path d="M266 176H326" stroke="rgba(255,255,255,0.35)" stroke-width="1" />
+      <text x="334" y="183" fill="#2FB6E9" font-size="26" style="font-family:var(--font-display);font-weight:600;font-variant-numeric:tabular-nums">32.5%</text>
+      <text x="334" y="201" fill="rgba(255,255,255,0.75)" font-size="13" style="font-family:var(--font-body)">Automotive-grade urea</text>
+
+      <circle cx="297" cy="292" r="2" fill="#FFFFFF" />
+      <path d="M297 292H326" stroke="rgba(255,255,255,0.35)" stroke-width="1" />
+      <text x="334" y="299" fill="#FFFFFF" font-size="26" style="font-family:var(--font-display);font-weight:600;font-variant-numeric:tabular-nums">67.5%</text>
+      <text x="334" y="317" fill="rgba(255,255,255,0.75)" font-size="13" style="font-family:var(--font-body)">Demineralised water</text>
+    </g>
+  </svg>
+</figure>
+
+<style>
+  .comp-art {
+    max-width: 460px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .comp-svg {
+    width: 100%;
+    height: auto;
+  }
+  .comp-liquid {
+    transition: transform 1s var(--ease-out) 0.15s;
+  }
+  .comp-callouts {
+    transition: opacity 0.6s var(--ease-out) 0.9s;
+  }
+  /* Pre-reveal state (full/lite only): liquid sits below the outline, callouts hidden.
+     Static tier / no-JS never matches these selectors — the SVG ships pre-filled. */
+  :global(html[data-tier='full']) .comp-art:not(.is-revealed) .comp-liquid,
+  :global(html[data-tier='lite']) .comp-art:not(.is-revealed) .comp-liquid {
+    transform: translateY(252px);
+  }
+  :global(html[data-tier='full']) .comp-art:not(.is-revealed) .comp-callouts,
+  :global(html[data-tier='lite']) .comp-art:not(.is-revealed) .comp-callouts {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .comp-liquid,
+    .comp-callouts {
+      transition: none;
+    }
+  }
+</style>

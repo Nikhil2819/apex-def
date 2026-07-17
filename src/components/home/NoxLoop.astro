@@ -1,0 +1,162 @@
+---
+// NoxLoop — the NOx→N₂ particle-transform diagram for Home #how-it-works
+// (design.md §2.6.5 / §4.1). Authored inline SVG with a pure-CSS loop on the
+// full/lite tiers: red NOx particles drift into the droplet/catalyst, white +
+// leaf N₂/H₂O particles drift out. Static tier (and reduced motion) shows the
+// complete diagram with all three states visible — no motion, per §3.4.
+// Contract: [data-nox-loop] on the svg root for the later GSAP/scroll layer.
+---
+
+<svg
+  class="nox-loop"
+  viewBox="0 0 440 220"
+  role="img"
+  aria-label="Diagram: red NOx particles meet DEF droplets in the SCR catalyst and exit as nitrogen and water vapour"
+  data-nox-loop
+>
+  <defs>
+    <linearGradient id="nox-drop-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B4F9C"></stop>
+      <stop offset="1" stop-color="#2FB6E9"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- exhaust flow line -->
+  <path d="M20 110H420" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-dasharray="4 7"></path>
+
+  <!-- SCR catalyst chamber with honeycomb hint -->
+  <rect x="200" y="78" width="100" height="64" rx="12" fill="rgba(10,27,61,0.6)" stroke="#8FA3B8" stroke-width="1.5"></rect>
+  <g stroke="rgba(47,182,233,0.35)" stroke-width="1.5" fill="none">
+    <path d="M240 88l10 5.8v11.6l-10 5.8-10-5.8V93.8Z"></path>
+    <path d="M266 102l10 5.8v11.6l-10 5.8-10-5.8v-11.6Z"></path>
+    <path d="M240 116l10 5.8v11.6l-10 5.8-10-5.8v-11.6Z"></path>
+  </g>
+
+  <!-- DEF droplet injector + spray hint -->
+  <g class="nox-drop">
+    <path d="M150 52c6.5 8.5 10.5 14 10.5 19a10.5 10.5 0 1 1-21 0c0-5 4-10.5 10.5-19Z" fill="url(#nox-drop-grad)"></path>
+  </g>
+  <circle cx="150" cy="94" r="2.2" fill="#2FB6E9" opacity="0.7"></circle>
+  <circle cx="150" cy="103" r="1.6" fill="#2FB6E9" opacity="0.5"></circle>
+
+  <!-- NOx in (red) -->
+  <circle class="nox-in nox-in--1" cx="40" cy="110" r="6" fill="#E5484D" opacity="0.8"></circle>
+  <circle class="nox-in nox-in--2" cx="72" cy="110" r="6" fill="#E5484D" opacity="0.8"></circle>
+  <circle class="nox-in nox-in--3" cx="104" cy="110" r="6" fill="#E5484D" opacity="0.8"></circle>
+
+  <!-- N₂ + H₂O out (white + leaf) -->
+  <circle class="nox-out nox-out--1" cx="336" cy="110" r="6" fill="#FFFFFF" opacity="0.92"></circle>
+  <circle class="nox-out nox-out--2" cx="364" cy="110" r="6" fill="#FFFFFF" opacity="0.92"></circle>
+  <circle class="nox-out nox-out--3" cx="392" cy="110" r="6" fill="#1F9D55" opacity="0.92"></circle>
+
+  <!-- labels -->
+  <text class="nox-label" x="72" y="146" text-anchor="middle">NOx</text>
+  <text class="nox-label" x="150" y="42" text-anchor="middle">DEF</text>
+  <text class="nox-label" x="364" y="146" text-anchor="middle">N₂ + H₂O</text>
+</svg>
+
+<style>
+  .nox-loop {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .nox-label {
+    fill: rgba(255, 255, 255, 0.55);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .nox-in,
+  .nox-out,
+  .nox-drop {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* Loop runs on full/lite only; the static tier keeps the complete diagram. */
+  html[data-tier='full'] .nox-in,
+  html[data-tier='lite'] .nox-in {
+    animation: nox-in 5.6s ease-in-out infinite;
+  }
+  html[data-tier='full'] .nox-in--2,
+  html[data-tier='lite'] .nox-in--2 {
+    animation-delay: 0.5s;
+  }
+  html[data-tier='full'] .nox-in--3,
+  html[data-tier='lite'] .nox-in--3 {
+    animation-delay: 1s;
+  }
+  html[data-tier='full'] .nox-out,
+  html[data-tier='lite'] .nox-out {
+    animation: nox-out 5.6s ease-in-out infinite;
+  }
+  html[data-tier='full'] .nox-out--2,
+  html[data-tier='lite'] .nox-out--2 {
+    animation-delay: 0.5s;
+  }
+  html[data-tier='full'] .nox-out--3,
+  html[data-tier='lite'] .nox-out--3 {
+    animation-delay: 1s;
+  }
+  html[data-tier='full'] .nox-drop,
+  html[data-tier='lite'] .nox-drop {
+    animation: nox-pulse 5.6s ease-in-out infinite;
+  }
+
+  @keyframes nox-in {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.8;
+    }
+    38% {
+      transform: translateX(112px);
+      opacity: 0.8;
+    }
+    46%,
+    100% {
+      transform: translateX(150px);
+      opacity: 0;
+    }
+  }
+  @keyframes nox-out {
+    0%,
+    44% {
+      transform: translateX(-32px);
+      opacity: 0;
+    }
+    56% {
+      opacity: 0.92;
+    }
+    92% {
+      transform: translateX(12px);
+      opacity: 0.92;
+    }
+    100% {
+      transform: translateX(16px);
+      opacity: 0;
+    }
+  }
+  @keyframes nox-pulse {
+    0%,
+    36%,
+    60%,
+    100% {
+      transform: scale(1);
+    }
+    46% {
+      transform: scale(1.14);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nox-in,
+    .nox-out,
+    .nox-drop {
+      animation: none !important;
+    }
+  }
+</style>

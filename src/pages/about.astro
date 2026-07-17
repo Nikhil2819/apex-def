@@ -418,6 +418,12 @@ const certCards = [
   .story-chip {
     margin-top: var(--sp-5);
   }
+  /* Keep the leaf treatment on dark: .section--dark .chip (0,2,0) would otherwise
+     override .chip--leaf — leaf-500 is the mandated parent-brand accent (§2.6.4). */
+  section.story .story-chip {
+    background: var(--leaf-tint);
+    color: var(--leaf-500);
+  }
   .story-narrative {
     margin-top: var(--sp-7);
     max-width: 120ch;

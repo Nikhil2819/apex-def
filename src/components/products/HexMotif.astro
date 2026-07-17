@@ -1,0 +1,34 @@
+---
+// Urea hexagon-node motif (design.md §2.6.3) — honeycomb cluster of 1.5px-stroke
+// hexagons with node dots on the centre cell. Parent positions it and sets opacity
+// (never above 10%, per the motif rules). Decorative only.
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+
+const R = 46;
+const SQ3 = Math.sqrt(3);
+const hexPoints = (cx: number, cy: number) =>
+  Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 180) * (60 * i - 30);
+    return [+(cx + R * Math.cos(a)).toFixed(1), +(cy + R * Math.sin(a)).toFixed(1)];
+  });
+const centres: [number, number][] = [
+  [210, 150],
+  [210 + R * SQ3, 150],
+  [210 - R * SQ3, 150],
+  [210 + (R * SQ3) / 2, 150 + R * 1.5],
+  [210 - (R * SQ3) / 2, 150 + R * 1.5],
+  [210 + (R * SQ3) / 2, 150 - R * 1.5],
+  [210 - (R * SQ3) / 2, 150 - R * 1.5],
+];
+const cells = centres.map(([cx, cy]) => hexPoints(cx, cy));
+const paths = cells.map((pts) => `M${pts.map((p) => p.join(' ')).join('L')}Z`);
+const dots = cells[0];
+---
+
+<svg class={className} viewBox="0 0 420 300" fill="none" aria-hidden="true">
+  {paths.map((d) => <path d={d} stroke="#2FB6E9" stroke-width="1.5" />)}
+  {dots.map(([x, y]) => <circle cx={x} cy={y} r="3" fill="#2FB6E9" />)}
+</svg>

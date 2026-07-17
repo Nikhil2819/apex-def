@@ -1,0 +1,75 @@
+---
+// Authored macro vector — tamper-evident lid ring and inkjet batch/MFG/EXP printing
+// on the 20 L bucket (design.md §4.3 #packaging-quality; launch art direction =
+// vector, DECISIONS.md #18). Dates/codes are illustrative print-format examples only.
+---
+
+<svg
+  class="batch-macro"
+  viewBox="0 0 640 300"
+  role="img"
+  aria-label="Macro illustration: tamper-evident lid ring and printed batch number, manufacture and expiry dates on the APEX D.E.F 20 L bucket"
+>
+  <defs>
+    <linearGradient id="bm-hdpe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B4F9C"></stop>
+      <stop offset="1" stop-color="#0A1B3D"></stop>
+    </linearGradient>
+    <linearGradient id="bm-lid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4CC2EE"></stop>
+      <stop offset="1" stop-color="#2FB6E9"></stop>
+    </linearGradient>
+    <clipPath id="bm-clip">
+      <rect x="0" y="0" width="640" height="300" rx="18"></rect>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#bm-clip)">
+    <!-- bucket wall -->
+    <rect x="0" y="0" width="640" height="300" fill="url(#bm-hdpe)"></rect>
+    <!-- left specular highlight -->
+    <rect x="34" y="0" width="14" height="300" rx="7" fill="rgba(255,255,255,0.14)"></rect>
+    <!-- lid band -->
+    <rect x="0" y="0" width="640" height="52" fill="url(#bm-lid)"></rect>
+    <rect x="0" y="44" width="640" height="8" fill="rgba(6,11,20,0.22)"></rect>
+    <!-- tamper-evident ring: perforation + pull tab -->
+    <rect x="0" y="52" width="640" height="26" fill="#1D9CCB"></rect>
+    <path d="M0 65h640" stroke="#0A1B3D" stroke-width="1.5" stroke-dasharray="7 6"></path>
+    <path
+      d="M96 52v26h34a5 5 0 0 0 0-10h-12"
+      fill="none"
+      stroke="#0A1B3D"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    ></path>
+    <path d="M0 78h640" stroke="rgba(6,11,20,0.35)" stroke-width="1.5"></path>
+
+    <!-- white front label -->
+    <rect x="46" y="106" width="238" height="152" rx="10" fill="#FFFFFF" stroke="rgba(10,27,61,0.10)" stroke-width="1.5"></rect>
+    <path
+      transform="translate(165 138)"
+      d="M0 -12C6 -4.4 9.5 0.7 9.5 5.1A9.5 9.5 0 1 1 -9.5 5.1C-9.5 0.7 -6 -4.4 0 -12Z"
+      fill="#1B4F9C"
+    ></path>
+    <text x="165" y="178" text-anchor="middle" fill="#0A1B3D" font-size="24" style="font-family:var(--font-display);font-weight:600;letter-spacing:0.02em">APEX D.E.F</text>
+    <text x="165" y="198" text-anchor="middle" fill="#5B6B7F" font-size="10.5" style="font-family:var(--font-body);font-weight:600;letter-spacing:0.14em">DIESEL EXHAUST FLUID · AUS 32</text>
+    <text x="165" y="238" text-anchor="middle" fill="#0A1B3D" font-size="26" style="font-family:var(--font-display);font-weight:600">20 L</text>
+
+    <!-- inkjet print, applied directly on the HDPE -->
+    <g style="font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:21px;letter-spacing:0.18em" fill="rgba(246,249,252,0.92)">
+      <text x="352" y="150">B.NO&#160;&#160;AX-2607</text>
+      <text x="352" y="188">MFG&#160;&#160;&#160;07/2026</text>
+      <text x="352" y="226">EXP&#160;&#160;&#160;01/2028</text>
+    </g>
+    <!-- faint second-pass ghost of the printhead row -->
+    <path d="M352 244h216" stroke="rgba(246,249,252,0.25)" stroke-width="1.5" stroke-dasharray="2 5"></path>
+  </g>
+  <rect x="0.75" y="0.75" width="638.5" height="298.5" rx="17.25" fill="none" stroke="rgba(10,27,61,0.10)" stroke-width="1.5"></rect>
+</svg>
+
+<style>
+  .batch-macro {
+    width: 100%;
+    height: auto;
+  }
+</style>

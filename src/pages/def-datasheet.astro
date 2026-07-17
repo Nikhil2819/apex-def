@@ -1,0 +1,304 @@
+---
+// /def-datasheet — print-styled datasheet linked from /products#spec-table
+// ("View Datasheet (print/save as PDF)"). Standalone branded page: full spec
+// table + pack list + contact block, with @media print styles. noindex — it is
+// a print utility duplicating /products content.
+import '../styles/global.css';
+import { site, skus } from '../data/site.js';
+import { specIntro, specRows, specFootnote } from '../components/products/spec-data.js';
+
+const primaryPhone = site.phones.find((p) => p.primary) ?? site.phones[0];
+---
+
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DEF Datasheet — ISO 22241-1 / IS 17042 | APEX D.E.F</title>
+    <meta
+      name="description"
+      content="Printable datasheet: the full ISO 22241-1 / IS 17042 (Part 1) specification for APEX D.E.F Diesel Exhaust Fluid (AUS 32), pack sizes and contact details."
+    />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="ds">
+    <div class="ds-page">
+      <header class="ds-head">
+        <div class="ds-brand">
+          <svg width="30" height="38" viewBox="0 0 22 28" fill="none" aria-hidden="true">
+            <path
+              d="M11 1.5C11 1.5 20.5 12.2 20.5 18.4C20.5 23.7 16.2 26.5 11 26.5C5.8 26.5 1.5 23.7 1.5 18.4C1.5 12.2 11 1.5 11 1.5Z"
+              fill="#1B4F9C"></path>
+            <path d="M7 19.5C7.4 21.4 8.9 22.8 11 23.1" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" fill="none"></path>
+          </svg>
+          <div>
+            <p class="ds-word">APEX D.E.F</p>
+            <p class="ds-tag overline">Diesel Exhaust Fluid (AUS 32) · Product Datasheet</p>
+          </div>
+        </div>
+        <button class="btn btn--primary-light ds-print" type="button" data-print hidden>
+          Print / save as PDF
+        </button>
+      </header>
+
+      <h1 class="h3">APEX D.E.F Diesel Exhaust Fluid (AUS 32)</h1>
+
+      <section class="ds-sec" aria-labelledby="ds-spec-h">
+        <h2 class="h4" id="ds-spec-h">The specification. In full.</h2>
+        <p class="ds-intro">{specIntro}</p>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <thead>
+              <tr>
+                <th scope="col">Parameter</th>
+                <th scope="col">Unit</th>
+                <th scope="col" class="num">Limit</th>
+                <th scope="col">Test method</th>
+              </tr>
+            </thead>
+            <tbody>
+              {specRows.map((row) => (
+                <tr>
+                  <td>{row.parameter}</td>
+                  <td class="ds-muted">{row.unit}</td>
+                  <td class="num tnum">{row.limit}</td>
+                  <td class="ds-muted">{row.method}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="ds-note">{specFootnote}</p>
+      </section>
+
+      <section class="ds-sec" aria-labelledby="ds-packs-h">
+        <h2 class="h4" id="ds-packs-h">One fluid. Six packs.</h2>
+        <div class="table-scroll">
+          <table class="ds-table">
+            <thead>
+              <tr>
+                <th scope="col">Pack</th>
+                <th scope="col">Capacity</th>
+                <th scope="col">Best for</th>
+              </tr>
+            </thead>
+            <tbody>
+              {skus.map((s) => (
+                <tr>
+                  <td>{s.pack}</td>
+                  <td class="tnum">{s.capacity}</td>
+                  <td class="ds-muted">{s.bestFor}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="ds-note">
+          No prices are listed on this site — call or WhatsApp for today's rate and delivery to
+          your district.
+        </p>
+      </section>
+
+      <section class="ds-sec" aria-labelledby="ds-contact-h">
+        <h2 class="h4" id="ds-contact-h">Contact</h2>
+        <div class="ds-contact">
+          <p>
+            <strong>{site.legalLine}</strong><br />
+            {site.address.lines[0]},<br />
+            {site.address.lines[1]}
+          </p>
+          <p>
+            <strong>Call / WhatsApp:</strong>{' '}
+            {site.phones.map((p, i) => (
+              <>
+                {i > 0 && ' · '}
+                <a class="tnum" href={`tel:${p.tel}`}>{p.display}</a>
+              </>
+            ))}
+            <br />
+            <strong>GSTIN:</strong> <span class="tnum">{site.gstin}</span><br />
+            <strong>Hours:</strong> {site.hours}
+          </p>
+        </div>
+        <p class="ds-cert">
+          Manufactured to ISO 22241-1 / IS 17042 (Part 1); BIS licence details will be displayed
+          on grant. Certificate of Analysis available with every batch.
+        </p>
+      </section>
+
+      <footer class="ds-foot">
+        <p class="ds-note">
+          © 2026 Apex Environment Solutions. All rights reserved. APEX D.E.F is a brand of Apex
+          Environment Solutions.
+        </p>
+        <p class="ds-back"><a href="/products">← Back to Products</a></p>
+      </footer>
+    </div>
+
+    <script>
+      const btn = document.querySelector('[data-print]');
+      if (btn) {
+        btn.hidden = false;
+        btn.addEventListener('click', () => window.print());
+      }
+    </script>
+
+    <style is:global>
+      .ds {
+        background: var(--porcelain-50);
+      }
+      .ds-page {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 40px 24px 72px;
+      }
+      .ds-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--sp-5);
+        flex-wrap: wrap;
+        padding-bottom: var(--sp-5);
+        border-bottom: 1px solid var(--hairline-light);
+        margin-bottom: var(--sp-7);
+      }
+      .ds-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-4);
+      }
+      .ds-word {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.5rem;
+        letter-spacing: -0.01em;
+        color: var(--navy-800);
+      }
+      .ds-tag {
+        color: var(--slate-500);
+        margin-top: 2px;
+      }
+      .ds-page h1 {
+        color: var(--blue-600);
+        margin-bottom: var(--sp-6);
+        max-width: 24ch;
+      }
+      .ds-sec {
+        margin-top: var(--sp-7);
+      }
+      .ds-sec h2 {
+        margin-bottom: var(--sp-4);
+      }
+      .ds-intro {
+        color: var(--slate-500);
+        max-width: 65ch;
+        margin-bottom: var(--sp-4);
+      }
+      .ds-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9375rem;
+        font-variant-numeric: tabular-nums;
+        min-width: 560px;
+        background: #fff;
+        border: 1px solid var(--hairline-light);
+        border-radius: var(--r-sm);
+      }
+      .ds-table th,
+      .ds-table td {
+        text-align: left;
+        padding: 10px 14px;
+      }
+      .ds-table thead th {
+        font-size: var(--fs-overline);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--slate-500);
+        border-bottom: 1px solid var(--hairline-light);
+      }
+      .ds-table tbody tr + tr {
+        border-top: 1px solid var(--hairline-light);
+      }
+      .ds-table .num {
+        text-align: right;
+      }
+      .ds-muted {
+        color: var(--slate-500);
+      }
+      .ds-note {
+        font-size: var(--fs-small);
+        color: var(--slate-500);
+        margin-top: var(--sp-4);
+        max-width: 70ch;
+      }
+      .ds-contact {
+        display: grid;
+        gap: var(--sp-4);
+      }
+      @media (min-width: 640px) {
+        .ds-contact {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .ds-cert {
+        margin-top: var(--sp-5);
+        padding: var(--sp-4) var(--sp-5);
+        background: #fff;
+        border: 1px solid var(--hairline-light);
+        border-left: 3px solid var(--blue-600);
+        border-radius: var(--r-sm);
+        font-size: var(--fs-small);
+        color: var(--ink-900);
+        max-width: 70ch;
+      }
+      .ds-foot {
+        margin-top: var(--sp-8);
+        padding-top: var(--sp-5);
+        border-top: 1px solid var(--hairline-light);
+      }
+      .ds-back {
+        margin-top: var(--sp-3);
+        font-size: var(--fs-small);
+      }
+
+      @page {
+        margin: 14mm;
+      }
+      @media print {
+        .ds {
+          background: #fff;
+        }
+        .ds-page {
+          max-width: none;
+          padding: 0;
+        }
+        .ds-print,
+        .ds-back {
+          display: none !important;
+        }
+        .ds-page a {
+          color: inherit;
+          text-decoration: none;
+        }
+        .table-scroll {
+          overflow: visible;
+        }
+        .ds-table {
+          min-width: 0;
+        }
+        .ds-table tr {
+          break-inside: avoid;
+        }
+        .ds-sec {
+          break-inside: avoid;
+        }
+        .ds-sec h2 {
+          break-after: avoid;
+        }
+      }
+    </style>
+  </body>
+</html>

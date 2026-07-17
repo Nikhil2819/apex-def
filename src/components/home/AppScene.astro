@@ -1,0 +1,145 @@
+---
+// AppScene — authored vector scene illustrations for Home #applications
+// (design.md §4.1: "launch: authored vector/gradient scene illustration" per
+// segment — tractor / truck / excavator / genset silhouettes over gradient
+// fields, brand palette, DECISIONS.md #18). Drawn to the shared style contract
+// (PackVisual / DealerHeroArt): navy silhouettes, #2FB6E9 accents, #8FA3B8
+// metal strokes at 1.5px, floor-shadow ellipses, no filters. Decorative —
+// each card carries its own text, so the art ships aria-hidden.
+
+type Scene = 'agriculture' | 'transport' | 'construction' | 'gensets';
+
+interface Props {
+  scene: Scene;
+}
+
+const { scene } = Astro.props;
+
+const METAL = '#8FA3B8';
+const BODY = '#0A1B3D';
+const EDGE = 'rgba(255,255,255,0.15)';
+const GLASS = 'rgba(47,182,233,0.16)';
+
+// Golden-hour field: tractor silhouette, def-blue low sun, leaf-tinted crop rows.
+const agriculture =
+  '<defs>' +
+  '<linearGradient id="ag-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060B14"/><stop offset="0.6" stop-color="#0A1B3D"/><stop offset="1" stop-color="#1B4F9C"/></linearGradient>' +
+  '<radialGradient id="ag-sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#2FB6E9" stop-opacity="0.3"/><stop offset="1" stop-color="#2FB6E9" stop-opacity="0"/></radialGradient>' +
+  '</defs>' +
+  '<rect width="520" height="200" fill="url(#ag-sky)"/>' +
+  '<circle cx="402" cy="196" r="86" fill="url(#ag-sun)"/>' +
+  '<circle cx="402" cy="196" r="30" fill="#2FB6E9" opacity="0.18"/>' +
+  '<rect y="200" width="520" height="120" fill="#071022"/>' +
+  '<path d="M0 200H520" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>' +
+  '<path d="M402 202 60 320M402 202 170 320M402 202 275 320M402 202 380 320M402 202 470 320" stroke="rgba(31,157,85,0.3)" stroke-width="1.5"/>' +
+  '<ellipse cx="210" cy="201" rx="98" ry="6" fill="rgba(6,11,20,0.55)"/>' +
+  '<g transform="translate(120 78)">' +
+  `<rect x="18" y="64" width="128" height="14" rx="4" fill="#081226"/>` +
+  `<rect x="26" y="14" width="46" height="52" rx="5" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  `<rect x="32" y="20" width="34" height="24" rx="3" fill="${GLASS}" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>` +
+  `<path d="M72 40h50q10 0 10 10v16H72Z" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  `<rect x="80" y="20" width="6" height="20" rx="2.5" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  `<rect x="98" y="68" width="20" height="13" rx="3" fill="#123A72" stroke="rgba(47,182,233,0.7)" stroke-width="1.5"/>` +
+  `<circle cx="52" cy="88" r="34" fill="${BODY}" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="52" cy="88" r="12" fill="#123A72" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="140" cy="102" r="20" fill="${BODY}" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="140" cy="102" r="7" fill="#123A72" stroke="${METAL}" stroke-width="1.5"/>` +
+  '</g>';
+
+// Dusk highway: side-view truck silhouette, def-blue horizon glow, lane dashes.
+const transport =
+  '<defs>' +
+  '<linearGradient id="tr-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060B14"/><stop offset="1" stop-color="#101F44"/></linearGradient>' +
+  '<linearGradient id="tr-glow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FB6E9" stop-opacity="0"/><stop offset="1" stop-color="#2FB6E9" stop-opacity="0.16"/></linearGradient>' +
+  '</defs>' +
+  '<rect width="520" height="212" fill="url(#tr-sky)"/>' +
+  '<rect y="164" width="520" height="48" fill="url(#tr-glow)"/>' +
+  '<rect y="212" width="520" height="108" fill="#081226"/>' +
+  '<path d="M0 212H520" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>' +
+  '<path d="M0 272H520" stroke="rgba(255,255,255,0.22)" stroke-width="2" stroke-dasharray="26 20"/>' +
+  '<ellipse cx="248" cy="214" rx="165" ry="6" fill="rgba(6,11,20,0.55)"/>' +
+  '<g transform="translate(88 102)">' +
+  `<rect x="0" y="6" width="212" height="66" rx="6" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  '<path d="M30 12v54M60 12v54M90 12v54M120 12v54M150 12v54M180 12v54" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>' +
+  `<path d="M220 22h30q7 0 10 6l8 15q2 4 2 8v21h-50Z" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  `<path d="M226 28h22q5 0 7 4l6 12h-35Z" fill="${GLASS}" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>` +
+  '<rect x="0" y="72" width="272" height="9" rx="2" fill="#081226"/>' +
+  '<rect x="222" y="16" width="12" height="4" rx="2" fill="#2FB6E9" opacity="0.85"/>' +
+  `<circle cx="34" cy="96" r="14" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/><circle cx="34" cy="96" r="5" fill="#123A72" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="66" cy="96" r="14" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/><circle cx="66" cy="96" r="5" fill="#123A72" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="196" cy="96" r="14" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/><circle cx="196" cy="96" r="5" fill="#123A72" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="246" cy="96" r="14" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/><circle cx="246" cy="96" r="5" fill="#123A72" stroke="${METAL}" stroke-width="1.5"/>` +
+  '</g>';
+
+// Site at dusk: excavator silhouette with raised boom over a dirt pile.
+const construction =
+  '<defs>' +
+  '<linearGradient id="cn-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060B14"/><stop offset="1" stop-color="#0E1F42"/></linearGradient>' +
+  '</defs>' +
+  '<rect width="520" height="238" fill="url(#cn-sky)"/>' +
+  '<path d="M0 238q130-22 260-14t260 2V320H0Z" fill="#071022"/>' +
+  '<path d="M0 238q130-22 260-14t260 2" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" fill="none"/>' +
+  '<path d="M330 234q24-18 50-8t20 12l-4 4H326Z" fill="#0A1B3D"/>' +
+  '<ellipse cx="240" cy="236" rx="120" ry="6" fill="rgba(6,11,20,0.55)"/>' +
+  '<g transform="translate(120 102)">' +
+  `<rect x="26" y="66" width="96" height="38" rx="6" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  '<rect x="32" y="72" width="34" height="5" rx="2.5" fill="rgba(47,182,233,0.75)"/>' +
+  `<rect x="92" y="38" width="36" height="46" rx="5" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  `<rect x="98" y="44" width="24" height="22" rx="3" fill="${GLASS}" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>` +
+  `<path d="M128 60 190 8l12 10-58 52Z" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5" stroke-linejoin="round"/>` +
+  `<path d="M196 14 234 74l-12 8-34-54Z" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5" stroke-linejoin="round"/>` +
+  `<path d="M224 76q16 4 18 20l-30 4 2-22Z" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5" stroke-linejoin="round"/>` +
+  `<path d="M150 44l34 22" stroke="${METAL}" stroke-width="1.5" stroke-linecap="round"/>` +
+  `<rect x="34" y="104" width="132" height="28" rx="14" fill="${BODY}" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="52" cy="118" r="7" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="76" cy="118" r="7" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="100" cy="118" r="7" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="124" cy="118" r="7" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/>` +
+  `<circle cx="148" cy="118" r="7" fill="#060B14" stroke="${METAL}" stroke-width="1.5"/>` +
+  '</g>';
+
+// Plant room: canopied DG set on a skid — louvres, exhaust stack, control panel.
+const gensets =
+  '<defs>' +
+  '<linearGradient id="gn-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#081226"/><stop offset="1" stop-color="#0C1D3F"/></linearGradient>' +
+  '</defs>' +
+  '<rect width="520" height="252" fill="url(#gn-wall)"/>' +
+  '<path d="M130 0v252M260 0v252M390 0v252" stroke="rgba(255,255,255,0.05)" stroke-width="1.5"/>' +
+  '<g stroke="#FFFFFF" stroke-width="1.5" fill="none" opacity="0.06"><path d="M440 28l18 10.4v20.8L440 69.6l-18-10.4V38.4Z"/><path d="M478 50l18 10.4v20.8L478 91.6l-18-10.4V60.4Z"/></g>' +
+  '<rect y="252" width="520" height="68" fill="#060D1C"/>' +
+  '<path d="M0 252H520" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>' +
+  '<ellipse cx="245" cy="254" rx="175" ry="7" fill="rgba(6,11,20,0.6)"/>' +
+  '<g transform="translate(110 98)">' +
+  `<rect x="206" y="-16" width="13" height="38" rx="4" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+  `<path d="M200 -16h25" stroke="${METAL}" stroke-width="1.5" stroke-linecap="round"/>` +
+  `<rect x="0" y="20" width="252" height="122" rx="9" fill="${BODY}" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"/>` +
+  '<path d="M18 42h64M18 56h64M18 70h64M18 84h64M18 98h64M18 112h64" stroke="rgba(255,255,255,0.13)" stroke-width="1.5"/>' +
+  '<path d="M104 30v102M186 30v102" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>' +
+  '<rect x="118" y="66" width="52" height="30" rx="4" fill="#FFFFFF" stroke="rgba(10,27,61,0.10)" stroke-width="1.5"/>' +
+  '<path transform="translate(144 76)" d="M0 -3.6C1.8 -1.3 2.9 0.2 2.9 1.5A2.9 2.9 0 1 1 -2.9 1.5C-2.9 0.2 -1.8 -1.3 0 -3.6Z" fill="#1B4F9C"/>' +
+  '<text x="144" y="90" text-anchor="middle" fill="#0A1B3D" font-size="6.5" style="font-family:var(--font-display);font-weight:600;letter-spacing:0.02em">APEX D.E.F</text>' +
+  `<rect x="198" y="52" width="40" height="34" rx="4" fill="#081226" stroke="${METAL}" stroke-width="1.5"/>` +
+  '<circle cx="208" cy="62" r="3" fill="#2FB6E9"/><circle cx="220" cy="62" r="3" fill="#1F9D55"/>' +
+  '<path d="M206 74h24M206 80h16" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>' +
+  `<path d="M252 116h50q8 0 8 8v30" stroke="${METAL}" stroke-width="1.5" fill="none"/>` +
+  '<rect x="-8" y="142" width="268" height="12" rx="3" fill="#081226" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>' +
+  '</g>';
+
+const scenes: Record<Scene, string> = { agriculture, transport, construction, gensets };
+---
+
+<svg
+  class="app-scene"
+  viewBox="0 0 520 320"
+  preserveAspectRatio="xMidYMid slice"
+  aria-hidden="true"
+  set:html={scenes[scene]}
+/>
+
+<style>
+  .app-scene {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>

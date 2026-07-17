@@ -1,0 +1,96 @@
+---
+// #construction chapter scene (design.md §4.4 / DECISIONS.md #18): authored
+// vector excavator-on-site silhouette with warm dust haze — brand palette,
+// 1.5px strokes, PackVisual gradient language. 16:7, slice-cropped on mobile.
+---
+
+<svg
+  class="scene-svg"
+  viewBox="0 0 800 350"
+  preserveAspectRatio="xMidYMid slice"
+  role="img"
+  aria-label="Illustration: CEV IV excavator working on a construction site"
+>
+  <defs>
+    <linearGradient id="co-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#060B14"></stop>
+      <stop offset="0.7" stop-color="#0A1B3D"></stop>
+      <stop offset="1" stop-color="#123A72"></stop>
+    </linearGradient>
+    <linearGradient id="co-dust" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5A524" stop-opacity="0"></stop>
+      <stop offset="1" stop-color="#F5A524" stop-opacity="0.14"></stop>
+    </linearGradient>
+    <linearGradient id="co-ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B1524"></stop>
+      <stop offset="1" stop-color="#060B14"></stop>
+    </linearGradient>
+    <linearGradient id="co-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B4F9C"></stop>
+      <stop offset="1" stop-color="#0A1B3D"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- sky + dust haze -->
+  <rect x="0" y="0" width="800" height="252" fill="url(#co-sky)"></rect>
+
+  <!-- background tower crane -->
+  <g stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linecap="round" fill="none">
+    <path d="M196 66V250M212 66V250"></path>
+    <path d="M196 66L212 82M196 98L212 114M196 130L212 146M196 162L212 178M196 194L212 210M196 226L212 242"></path>
+    <path d="M120 82H320"></path>
+    <path d="M204 48L120 82M204 48L320 82"></path>
+    <path d="M290 82V120"></path>
+    <path d="M290 120c0 5 8 5 8 0"></path>
+  </g>
+  <rect x="128" y="84" width="20" height="10" fill="rgba(255,255,255,0.08)"></rect>
+  <rect x="206" y="82" width="14" height="12" fill="rgba(255,255,255,0.1)"></rect>
+
+  <rect x="0" y="196" width="800" height="56" fill="url(#co-dust)"></rect>
+
+  <!-- ground -->
+  <rect x="0" y="252" width="800" height="98" fill="url(#co-ground)"></rect>
+  <path d="M0 252h800" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></path>
+  <path d="M96 252C130 232 190 236 232 252Z" fill="#0A1B3D"></path>
+  <path d="M120 244l10-4M150 240l12 2M186 244l8-6" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-linecap="round"></path>
+
+  <!-- site barrier -->
+  <rect x="132" y="280" width="64" height="9" rx="2" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"></rect>
+  <path d="M138 288l8-7M154 288l8-7M170 288l8-7" stroke="#F5A524" stroke-width="1.5" opacity="0.45"></path>
+  <path d="M140 289v15M188 289v15" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"></path>
+
+  <!-- excavator, boom reaching left -->
+  <path d="M450 250L362 196L374 182L466 234Z" fill="url(#co-body)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linejoin="round"></path>
+  <path d="M368 190L306 248L318 258L380 202Z" fill="url(#co-body)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linejoin="round"></path>
+  <path d="M312 250L282 260L292 284L320 272Z" fill="#0A1B3D" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linejoin="round"></path>
+  <path d="M420 220L376 198M366 196L340 226" stroke="#8FA3B8" stroke-width="1.5" stroke-linecap="round"></path>
+  <rect x="446" y="232" width="138" height="50" rx="8" fill="url(#co-body)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></rect>
+  <path d="M556 242h18M556 250h18M556 258h18" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linecap="round"></path>
+  <rect x="446" y="206" width="46" height="48" rx="6" fill="url(#co-body)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></rect>
+  <rect x="452" y="212" width="32" height="24" rx="3" fill="rgba(47,182,233,0.14)" stroke="rgba(47,182,233,0.45)" stroke-width="1.5"></rect>
+  <rect x="460" y="198" width="9" height="7" rx="2.5" fill="#2FB6E9"></rect>
+  <!-- tracks -->
+  <rect x="434" y="284" width="168" height="32" rx="16" fill="#0A1B3D" stroke="#8FA3B8" stroke-width="1.5"></rect>
+  <g fill="none" stroke="rgba(143,163,184,0.6)" stroke-width="1.5">
+    <circle cx="458" cy="300" r="8"></circle>
+    <circle cx="486" cy="300" r="8"></circle>
+    <circle cx="514" cy="300" r="8"></circle>
+    <circle cx="542" cy="300" r="8"></circle>
+    <circle cx="570" cy="300" r="8"></circle>
+  </g>
+  <!-- dig debris at the bucket -->
+  <path d="M286 288l-8 6M296 290l-4 8" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linecap="round"></path>
+
+  <!-- cones -->
+  <path d="M636 302L644 282L652 302Z" fill="#F5A524" opacity="0.55"></path>
+  <path d="M632 302h24" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round"></path>
+  <path d="M614 304L619 291L624 304Z" fill="#F5A524" opacity="0.4"></path>
+</svg>
+
+<style>
+  .scene-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>

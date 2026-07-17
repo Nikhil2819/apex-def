@@ -1,0 +1,339 @@
+---
+// SCR pipeline scene — design.md §4.5 #scr, static/mobile base tier.
+// One authored engine→injector→catalyst→tailpipe schematic (1.5px hairline style);
+// scene N highlights its stage. CSS keyframe loops run on full/lite tiers once the
+// parent [data-scr-scene] block is .is-revealed; static tier / no-JS = frozen states.
+// The later motion layer pins/scrubs via the [data-scr] / [data-scr-scene] contracts.
+
+interface Props {
+  scene: 1 | 2 | 3 | 4 | 5 | 6;
+}
+
+const { scene } = Astro.props;
+
+const HAIR = 'rgba(255,255,255,0.14)';
+const HAIR2 = 'rgba(255,255,255,0.22)';
+const NAVY1 = '#0D2140';
+const PIPE = '#0F2447';
+const RED = '#E5484D';
+const DEF = '#2FB6E9';
+const LEAF = '#1F9D55';
+
+const hexPath = (cx: number, cy: number, r: number) => {
+  const pts = Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 180) * (60 * i - 30);
+    return `${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`;
+  });
+  return `M${pts.join('L')}Z`;
+};
+
+const label = (x: number, t: string) =>
+  `<text x="${x}" y="226" text-anchor="middle" font-size="9" letter-spacing="1.5" font-weight="600" fill="rgba(255,255,255,0.42)" style="font-family:var(--font-body)">${t}</text>`;
+
+const dot = (cx: number, cy: number, r: number, fill: string, cls = '', extra = '') =>
+  `<circle ${cls ? `class="${cls}" ` : ''}cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"${extra} />`;
+
+/* ---------- base schematic ---------- */
+const injHot = scene === 2;
+const catHot = scene === 4;
+
+const engine =
+  `<g${scene === 1 ? ' class="a-engine"' : ''}>` +
+  `<rect x="48" y="58" width="30" height="18" rx="4" fill="${NAVY1}" stroke="${HAIR}" stroke-width="1.5"/>` +
+  `<rect x="28" y="74" width="110" height="96" rx="10" fill="${NAVY1}" stroke="${HAIR2}" stroke-width="1.5"/>` +
+  `<path d="M46 94h74M46 110h74M46 126h74" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>` +
+  `<rect x="40" y="170" width="86" height="12" rx="6" fill="#0A1B3D" stroke="${HAIR}" stroke-width="1.5"/>` +
+  `</g>`;
+
+const pipeA =
+  `<rect x="136" y="122" width="8" height="36" rx="2" fill="${NAVY1}" stroke="${HAIR}" stroke-width="1.5"/>` +
+  `<rect x="144" y="128" width="190" height="24" fill="${PIPE}" stroke="${HAIR}" stroke-width="1.5"/>`;
+
+const injector =
+  `<rect x="214" y="34" width="32" height="30" rx="5" fill="${NAVY1}" stroke="${HAIR2}" stroke-width="1.5"/>` +
+  `<path${injHot ? ' class="a-pack"' : ''} d="M230 41c3 3.8 4.6 6 4.6 8a4.6 4.6 0 1 1-9.2 0c0-2 1.6-4.2 4.6-8Z" fill="${DEF}"${injHot ? '' : ' opacity="0.55"'}/>` +
+  `<path d="M230 64v18" stroke="${injHot ? 'rgba(47,182,233,0.7)' : HAIR2}" stroke-width="1.5"/>` +
+  `<rect x="220" y="82" width="20" height="26" rx="4" fill="${NAVY1}" stroke="${injHot ? DEF : HAIR2}" stroke-width="1.5"/>` +
+  `<rect x="226" y="108" width="8" height="20" rx="2" fill="${PIPE}" stroke="${HAIR}" stroke-width="1.5"/>` +
+  `<circle cx="230" cy="129" r="3.5" fill="${injHot ? DEF : '#123A72'}"/>`;
+
+const hexStroke = catHot ? 'rgba(47,182,233,0.55)' : 'rgba(47,182,233,0.30)';
+const cellsRow1 = [380, 402, 424, 446, 468].map((cx) => hexPath(cx, 130, 8.5));
+const cellsRow2 = [391, 413, 435, 457].map((cx) => hexPath(cx, 150, 8.5));
+const catalyst =
+  `<path d="M334 128L348 112L348 168L334 152Z" fill="${PIPE}" stroke="${HAIR}" stroke-width="1.5"/>` +
+  `<rect x="348" y="104" width="150" height="72" rx="14" fill="${NAVY1}" stroke="${catHot ? 'rgba(47,182,233,0.8)' : HAIR2}" stroke-width="1.5"/>` +
+  `<rect x="366" y="114" width="114" height="52" rx="8" fill="rgba(47,182,233,0.05)" stroke="${catHot ? 'rgba(47,182,233,0.5)' : 'rgba(47,182,233,0.28)'}" stroke-width="1.5"/>` +
+  `<path d="${cellsRow1.join('')}${cellsRow2.join('')}" fill="none" stroke="${hexStroke}" stroke-width="1.5" stroke-linejoin="round"/>` +
+  `<path d="M498 112L514 128L514 152L498 168Z" fill="${PIPE}" stroke="${HAIR}" stroke-width="1.5"/>`;
+
+const tailpipe =
+  `<rect x="514" y="128" width="84" height="24" fill="${PIPE}" stroke="${HAIR}" stroke-width="1.5"/>` +
+  `<path d="M598 124L614 117V163L598 156Z" fill="${NAVY1}" stroke="${HAIR2}" stroke-width="1.5"/>`;
+
+const labels =
+  label(83, 'ENGINE') + label(230, 'DEF INJECTOR') + label(423, 'SCR CATALYST') + label(556, 'TAILPIPE');
+
+const floor = `<ellipse cx="320" cy="244" rx="256" ry="7" fill="rgba(47,182,233,0.05)"/>`;
+
+const base = engine + pipeA + injector + catalyst + tailpipe + labels;
+
+/* ---------- per-scene overlays ---------- */
+let defs = `<clipPath id="s${scene}pipe"><rect x="146" y="130" width="186" height="20"/></clipPath>`;
+let behind = '';
+let overlay = '';
+
+if (scene === 1) {
+  const row1 = [120, 146, 172, 198, 224, 250, 276, 302, 328]
+    .map((x) => dot(x, 137, 2.6, RED, '', ' opacity="0.85"'))
+    .join('');
+  const row2 = [133, 159, 185, 211, 237, 263, 289, 315, 341]
+    .map((x) => dot(x, 145, 2.6, RED, '', ' opacity="0.7"'))
+    .join('');
+  overlay =
+    `<g clip-path="url(#s${scene}pipe)">` +
+    `<g class="a-nox">${row1}</g>` +
+    `<g class="a-nox" style="animation-delay:-0.75s">${row2}</g>` +
+    `</g>`;
+}
+
+if (scene === 2) {
+  defs +=
+    `<radialGradient id="s2mist"><stop offset="0" stop-color="rgba(47,182,233,0.28)"/><stop offset="1" stop-color="rgba(47,182,233,0)"/></radialGradient>`;
+  const commingle = [
+    [152, 136],
+    [166, 145],
+    [180, 138],
+    [196, 143],
+    [210, 136],
+  ]
+    .map(([x, y]) => dot(x, y, 2.4, RED, '', ' opacity="0.55"'))
+    .join('');
+  const spray = [
+    [233, 132, 0],
+    [239, 137, 0.3],
+    [245, 141, 0.6],
+    [251, 145, 0.9],
+  ]
+    .map(([x, y, d]) => dot(x as number, y as number, 2, DEF, 'a-spray', ` style="animation-delay:${d}s"`))
+    .join('');
+  overlay =
+    `<circle class="a-halo" cx="230" cy="112" r="18" fill="rgba(47,182,233,0.14)"/>` +
+    `<g clip-path="url(#s${scene}pipe)">` +
+    commingle +
+    `<ellipse class="a-mist" cx="266" cy="141" rx="24" ry="8" fill="url(#s2mist)"/>` +
+    spray +
+    `</g>`;
+}
+
+if (scene === 3) {
+  const hexes = [
+    [270, 140, 0],
+    [288, 136, 0.4],
+    [305, 144, 0.8],
+    [321, 139, 1.2],
+  ]
+    .map(
+      ([cx, cy, d]) =>
+        `<path class="a-hex" style="animation-delay:${d}s" d="${hexPath(cx as number, cy as number, 6.5)}" fill="none" stroke="${DEF}" stroke-width="1.5" stroke-linejoin="round"/>`
+    )
+    .join('');
+  overlay =
+    dot(248, 136, 2, DEF, '', ' opacity="0.45"') +
+    dot(254, 143, 2, DEF, '', ' opacity="0.3"') +
+    hexes +
+    dot(279, 147, 1.5, 'rgba(255,255,255,0.6)') +
+    dot(297, 132, 1.5, 'rgba(255,255,255,0.6)') +
+    dot(314, 147, 1.5, 'rgba(255,255,255,0.6)');
+}
+
+if (scene === 4) {
+  defs += `<clipPath id="s4tail"><rect x="516" y="130" width="82" height="20"/></clipPath>`;
+  const cells = [
+    [402, 130, 0],
+    [435, 150, 0.7],
+    [468, 130, 1.4],
+  ]
+    .map(
+      ([cx, cy, d]) =>
+        `<path class="a-cell" style="animation-delay:${d}s" d="${hexPath(cx as number, cy as number, 8.5)}" fill="rgba(47,182,233,0.3)"/>`
+    )
+    .join('');
+  const flowDots = [496, 520, 544, 568, 592].map((x) => dot(x, 137, 2.2, 'rgba(255,255,255,0.9)')).join('');
+  const flowDrops = [508, 532, 556, 580].map((x) => dot(x, 144, 2, 'rgba(47,182,233,0.5)')).join('');
+  overlay =
+    dot(338, 137, 2.4, RED, '', ' opacity="0.8"') +
+    dot(344, 145, 2.4, RED, '', ' opacity="0.8"') +
+    `<path d="${hexPath(341, 133, 5)}${hexPath(347, 141, 5)}" fill="none" stroke="${DEF}" stroke-width="1.5" stroke-linejoin="round"/>` +
+    cells +
+    dot(502, 140, 2.2, 'rgba(255,255,255,0.85)') +
+    dot(509, 134, 2, 'rgba(255,255,255,0.7)') +
+    `<g clip-path="url(#s4tail)">` +
+    `<g class="a-flow">${flowDots}</g>` +
+    `<g class="a-flow" style="animation-delay:-0.8s">${flowDrops}</g>` +
+    `</g>`;
+}
+
+if (scene === 5) {
+  defs += `<radialGradient id="s5wash"><stop offset="0" stop-color="rgba(31,157,85,0.14)"/><stop offset="1" stop-color="rgba(31,157,85,0)"/></radialGradient>`;
+  behind = `<circle cx="600" cy="28" r="120" fill="url(#s5wash)"/>`;
+  const tailFlow =
+    [524, 548, 572].map((x) => dot(x, 137, 2.2, 'rgba(255,255,255,0.9)')).join('') +
+    [536, 560, 584].map((x) => dot(x, 143, 2, 'rgba(47,182,233,0.5)')).join('');
+  const plume = [
+    [620, 134, 2.5, 'rgba(255,255,255,0.95)', 0],
+    [627, 126, 2.2, LEAF, 0.45],
+    [622, 142, 2, 'rgba(47,182,233,0.5)', 0.9],
+    [632, 118, 1.9, 'rgba(255,255,255,0.8)', 1.35],
+    [618, 146, 1.6, 'rgba(255,255,255,0.6)', 1.8],
+  ]
+    .map(([x, y, r, f, d]) => dot(x as number, y as number, r as number, f as string, 'a-clean', ` style="animation-delay:${d}s"`))
+    .join('');
+  overlay =
+    tailFlow +
+    plume +
+    `<path d="M577 68c-1-16 10-29 26-31 2 16-9 29-26 31Z" fill="rgba(31,157,85,0.12)" stroke="${LEAF}" stroke-width="1.5" stroke-linejoin="round"/>` +
+    `<path d="M580 65c5-10 13-18 20-22" stroke="${LEAF}" stroke-width="1.5" stroke-linecap="round" fill="none"/>`;
+}
+
+if (scene === 6) {
+  const tag = (x: number, t: string) =>
+    `<rect x="${x}" y="26" width="36" height="22" rx="11" fill="rgba(229,72,77,0.08)" stroke="rgba(229,72,77,0.6)" stroke-width="1.5"/>` +
+    `<text x="${x + 18}" y="41" text-anchor="middle" font-size="11" font-weight="600" fill="rgba(255,255,255,0.85)" style="font-family:var(--font-body)">${t}</text>` +
+    `<line x1="${x + 7}" y1="44" x2="${x + 29}" y2="30" stroke="${RED}" stroke-width="1.5" opacity="0.85"/>`;
+  overlay =
+    tag(248, 'Cu') +
+    tag(302, 'Zn') +
+    tag(356, 'Fe') +
+    `<g class="a-pure">` +
+    `<path d="M320 58C320 58 366 110 366 146C366 175 346 192 320 192C294 192 274 175 274 146C274 110 320 58 320 58Z" fill="rgba(47,182,233,0.08)" stroke="${DEF}" stroke-width="1.5"/>` +
+    `<path d="M305 148l12 12 21-25" fill="none" stroke="${LEAF}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `</g>`;
+}
+
+const inner =
+  `<defs>${defs}</defs>` +
+  behind +
+  floor +
+  (scene === 6 ? `<g opacity="0.4">${base}</g>` : base) +
+  overlay;
+
+const ariaLabels: Record<number, string> = {
+  1: 'Diagram: red NOx particles stream out of the engine into the exhaust pipe',
+  2: 'Diagram: the dosing module sprays a mist of DEF droplets into the hot exhaust stream',
+  3: 'Diagram: DEF droplets decompose into ammonia, shown as hexagon nodes inside the pipe',
+  4: 'Diagram: inside the SCR catalyst honeycomb, ammonia meets NOx and clean particles exit',
+  5: 'Diagram: a calm stream of nitrogen and water vapour leaves the tailpipe',
+  6: 'Diagram: a pure DEF droplet with a check mark; copper, zinc and iron are crossed out as catalyst poisons',
+};
+---
+
+<svg class="scr-svg" viewBox="0 0 640 260" role="img" aria-label={ariaLabels[scene]} set:html={inner} />
+
+<style is:global>
+  .scr-svg {
+    width: 100%;
+    height: auto;
+  }
+  .scr-svg .a-engine,
+  .scr-svg .a-hex,
+  .scr-svg .a-cell,
+  .scr-svg .a-pure {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+  }
+
+  /* Loops run only on full/lite tiers once the scene block has revealed.
+     Static tier / no-JS never adds .is-revealed → frozen mid-scene states. */
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-nox,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-nox {
+    animation: scr-drift 1.5s linear infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-engine,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-engine {
+    animation: scr-pulse 0.9s ease-in-out infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-halo,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-halo {
+    animation: scr-halo 1.6s ease-in-out infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-mist,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-mist {
+    animation: scr-halo 2s ease-in-out infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-pack,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-pack {
+    animation: scr-pack 1.6s ease-in-out infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-spray,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-spray {
+    animation: scr-spray 1.2s ease-out infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-hex,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-hex {
+    animation: scr-hex 1.8s ease-in-out infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-cell,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-cell {
+    animation: scr-cell 2.1s linear infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-flow,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-flow {
+    animation: scr-flow 1.6s linear infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-clean,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-clean {
+    animation: scr-clean 2.2s ease-out infinite;
+  }
+  html[data-tier='full'] [data-scr-scene].is-revealed .a-pure,
+  html[data-tier='lite'] [data-scr-scene].is-revealed .a-pure {
+    animation: scr-glow 2.4s ease-in-out infinite;
+  }
+
+  @keyframes scr-drift {
+    to { transform: translateX(26px); }
+  }
+  @keyframes scr-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.015); }
+  }
+  @keyframes scr-halo {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  @keyframes scr-pack {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+  @keyframes scr-spray {
+    0% { transform: translate(0, 0); opacity: 1; }
+    100% { transform: translate(12px, 10px); opacity: 0; }
+  }
+  @keyframes scr-hex {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.16); opacity: 1; }
+  }
+  @keyframes scr-cell {
+    0%, 78% { opacity: 0.18; }
+    86% { opacity: 0.85; }
+    100% { opacity: 0.18; }
+  }
+  @keyframes scr-flow {
+    to { transform: translateX(24px); }
+  }
+  @keyframes scr-clean {
+    0% { transform: translate(0, 0); opacity: 0; }
+    25% { opacity: 0.9; }
+    100% { transform: translate(9px, -18px); opacity: 0; }
+  }
+  @keyframes scr-glow {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-scr-scene] .scr-svg * {
+      animation: none !important;
+    }
+  }
+</style>

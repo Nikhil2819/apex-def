@@ -1,17 +1,683 @@
 ---
+// Applications /applications — content.md §3.4, design.md §4.4. Static-first
+// base: dark page hero, sticky in-page sub-nav (scroll-spy via small IO
+// script), then 4 segment chapters (#agriculture #transport #construction
+// #gensets), each = full-bleed authored vector scene band (scrim + chip +
+// display-2) + light info band (body, dosing callout, recommended-pack mini
+// cards, CTA, caption line). Motion-layer contracts shipped as data
+// attributes: [data-subnav] / [data-subnav-link], [data-segment],
+// [data-scene] / [data-scene-art] (entry scale hook), [data-derate-callout]
+// (one-time amber pulse). Entrances via the global data-reveal IO system.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PackVisual from '../components/PackVisual.astro';
+import SegmentCta from '../components/applications/SegmentCta.astro';
+import AgricultureScene from '../components/applications/AgricultureScene.astro';
+import TransportScene from '../components/applications/TransportScene.astro';
+import ConstructionScene from '../components/applications/ConstructionScene.astro';
+import GensetsScene from '../components/applications/GensetsScene.astro';
+import CtaRow from '../components/CtaRow.astro';
+import { site } from '../data/site.js';
+import { breadcrumbs, graph } from '../utils/schema.js';
+
+type PackId = 'def-5l' | 'def-10l' | 'def-20l' | 'def-210l' | 'def-1000l' | 'def-bulk';
+
+interface Segment {
+  id: string;
+  label: string;
+  chip: string;
+  heading: string;
+  body: string[];
+  /** Transport only: derate warning excerpt pulled from the body (content.md §3.4) */
+  callout: string | null;
+  after: string[];
+  dosing: string;
+  packs: { sku: PackId; name: string; use: string }[];
+  caption: string;
+  note: string;
+  leaf: boolean;
+  storageLink: boolean;
+}
+
+// All copy verbatim from content.md §3.4. Transport body is split so the
+// derate sentences render inside the amber callout without duplication —
+// read in order, the three blocks reconstruct the exact §3.4 body.
+const segments: Segment[] = [
+  {
+    id: 'agriculture',
+    label: 'Agriculture',
+    chip: 'TREM Stage IV · since 1 January 2023',
+    heading: 'Agriculture. Our first field.',
+    body: [
+      "Since 1 January 2023, every new tractor above 50 HP sold in India meets TREM Stage IV — and most do it with SCR, which means a DEF tank next to the diesel tank. Combine harvesters, typically above 75 HP, are in the same boat. TREM Stage V is being phased in from 2026, extending after-treatment further across the range. APEX D.E.F was built for this market first: packs a farmer can lift, dates a farmer can read, and delivery that understands harvest doesn't wait.",
+    ],
+    callout: null,
+    after: [],
+    dosing:
+      'Field duty is heavy duty: expect DEF consumption of 5–10% of diesel on high-load work like tillage and harvesting — roughly 5–10 L of DEF per 100 L of diesel. Carry a spare can during season.',
+    packs: [
+      { sku: 'def-5l', name: '5 L Can', use: 'spare-behind-the-seat' },
+      { sku: 'def-10l', name: '10 L Can', use: 'per-season starter' },
+      { sku: 'def-20l', name: '20 L Bucket', use: 'harvesters, farm workshops' },
+    ],
+    caption: 'TREM IV tractors above 50 HP carry a dedicated DEF tank — usually with a blue cap.',
+    note: "WhatsApp your tractor model — we'll confirm dosing.",
+    leaf: true,
+    storageLink: false,
+  },
+  {
+    id: 'transport',
+    label: 'Transport',
+    chip: 'BS-VI · since 1 April 2020',
+    heading: 'Transport. Full torque or nothing.',
+    body: [
+      'BS-VI, in force nationwide since 1 April 2020, cut permitted NOx by roughly 90% versus BS-IV — and virtually every BS-VI truck and bus does it with SCR.',
+    ],
+    callout:
+      "The ECU is unforgiving: run the DEF tank dry or fill it with poor fluid, and the vehicle warns, then derates — speed and power capped until the system is satisfied. On a contract with a delivery window, that's money.",
+    after: [
+      'APEX keeps fleets moving with drum and IBC supply, scheduled drops and emergency dispatch for regular customers.',
+    ],
+    dosing:
+      'Plan on 3–6% of diesel consumption — the working rule is 5 L of DEF per 100 L of diesel. A truck running 10,000 km a month typically consumes roughly 150–170 L of DEF — the same arithmetic behind one 210 L drum lasting ~12,500 km.',
+    packs: [
+      { sku: 'def-20l', name: '20 L Bucket', use: 'in-cab spare' },
+      { sku: 'def-210l', name: '210 L Drum', use: 'fleet yard' },
+      { sku: 'def-1000l', name: '1000 L IBC', use: 'depot' },
+      { sku: 'def-bulk', name: 'Bulk', use: 'pump/terminal storage' },
+    ],
+    caption: 'BS-VI truck instrument cluster: the DEF gauge sits next to the fuel gauge for a reason.',
+    note: 'Fleet rates on WhatsApp — send vehicle count.',
+    leaf: false,
+    storageLink: false,
+  },
+  {
+    id: 'construction',
+    label: 'Construction',
+    chip: 'CEV Stage IV · since October 2021',
+    heading: 'Construction & Mining. Uptime is the product.',
+    body: [
+      "CEV Stage IV has applied to construction equipment vehicles since October 2021, bringing SCR to backhoe loaders, excavators, cranes and wheel loaders across the 37–560 kW range. Stage V is being phased in, tightening things further. On a site, a derated machine is a stopped machine — and site dust is exactly the contamination SCR systems hate. Sealed APEX packs with dedicated dispensing keep the fluid clean from our plant to your machine's tank.",
+    ],
+    callout: null,
+    after: [],
+    dosing:
+      'Heavy-cycle earthmoving runs DEF at the higher end of the 3–6%-of-diesel band. Size your site stock on machine-hours, not calendar weeks — we can help with the arithmetic.',
+    packs: [
+      { sku: 'def-20l', name: '20 L Bucket', use: 'per-machine' },
+      { sku: 'def-210l', name: '210 L Drum', use: 'site store' },
+      { sku: 'def-1000l', name: '1000 L IBC', use: 'large sites' },
+    ],
+    caption: 'CEV IV machines: fill DEF with dedicated equipment only — site dust is a catalyst killer.',
+    note: 'Site-supply scheduling on request.',
+    leaf: false,
+    storageLink: true,
+  },
+  {
+    id: 'gensets',
+    label: 'Gensets',
+    chip: 'CPCB IV+ · since 1 July 2023',
+    heading: 'Gensets. The newest DEF buyers in India.',
+    body: [
+      "CPCB IV+ norms, effective 1 July 2023, require new DG sets up to 800 kW to run after-treatment — including SCR with monitored DEF usage. Facility managers who never stocked DEF now must: hospitals, housing societies, telecom sites, factories. The catch is shelf life — standby gensets consume DEF slowly, so buy pack sizes you'll finish within 12 months and check expiry dates before every top-up. APEX packs print both.",
+    ],
+    callout: null,
+    after: [],
+    dosing:
+      'Consumption tracks genset load and run-hours. For standby duty, favour 20 L packs over drums — fresher fluid beats bulk convenience. Prime-power sites should size monthly and consider IBC supply.',
+    packs: [
+      { sku: 'def-20l', name: '20 L Bucket', use: 'standby sets' },
+      { sku: 'def-210l', name: '210 L Drum', use: 'prime power' },
+      { sku: 'def-1000l', name: '1000 L IBC', use: 'multi-genset facilities' },
+    ],
+    caption: 'CPCB IV+ DG sets log DEF usage — running without it is a compliance event.',
+    note: 'AMC-friendly scheduled supply for facilities.',
+    leaf: false,
+    storageLink: false,
+  },
+];
+
+const scenes: Record<string, any> = {
+  agriculture: AgricultureScene,
+  transport: TransportScene,
+  construction: ConstructionScene,
+  gensets: GensetsScene,
+};
+
+// JSON-LD — content.md §5: BreadcrumbList + ItemList of 4 WebPageElement
+// anchors (Agriculture / Transport / Construction & Mining / Gensets).
+const schemaNames: Record<string, string> = {
+  agriculture: 'Agriculture',
+  transport: 'Transport',
+  construction: 'Construction & Mining',
+  gensets: 'Gensets',
+};
+const schema = graph(
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Applications', path: '/applications' },
+  ]),
+  {
+    '@type': 'ItemList',
+    '@id': `${site.domain}/applications#segments`,
+    itemListElement: segments.map((seg, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'WebPageElement',
+        '@id': `${site.domain}/applications#${seg.id}`,
+        url: `${site.domain}/applications#${seg.id}`,
+        name: schemaNames[seg.id],
+      },
+    })),
+  }
+);
 ---
 
 <BaseLayout
   title="DEF for Tractors, Trucks, Machines & Gensets | APEX D.E.F"
   description="DEF for TREM IV tractors, BS-VI trucks &amp; buses, CEV IV construction machines and CPCB IV+ gensets. Dosing guidance and right pack sizes for each duty."
+  ogTitle="Wherever diesel works, DEF works."
+  ogDescription="TREM IV fields, BS-VI highways, CEV IV sites, CPCB IV+ gensets — the norm, the dosing and the pack for each."
   path="/applications"
+  schema={schema}
 >
-  <section class="section--dark" style="padding-top: calc(var(--header-h-mobile) + var(--sp-8)); min-height: 60svh;">
+  <!-- Page hero -->
+  <section class="section--dark app-hero">
+    <svg class="hero-hexes" viewBox="0 0 220 160" aria-hidden="true">
+      <g stroke="rgba(47,182,233,0.16)" stroke-width="1.5" fill="none">
+        <path d="M60 18l22 12.7v25.4L60 68.8 38 56.1V30.7Z"></path>
+        <path d="M118 46l17 9.8v19.6l-17 9.8-17-9.8V55.8Z"></path>
+        <path d="M74 88l13 7.5v15L74 118l-13-7.5v-15Z"></path>
+      </g>
+      <circle cx="60" cy="18" r="2" fill="rgba(47,182,233,0.4)"></circle>
+      <circle cx="118" cy="46" r="2" fill="rgba(47,182,233,0.4)"></circle>
+    </svg>
     <div class="container">
       <p class="overline" data-reveal>Applications</p>
-      <h1 class="display-2" style="margin-top: var(--sp-4); max-width: 18ch;" data-reveal>Built for every duty cycle that burns diesel.</h1>
+      <h1 class="display-2" data-reveal style="--reveal-delay: 1">
+        Built for every duty cycle that burns diesel.
+      </h1>
+      <p class="lead muted app-intro" data-reveal style="--reveal-delay: 2">
+        Emission norms put SCR — and therefore DEF — into every corner of Indian diesel. Find your
+        segment below: the rule that applies to you, how much DEF you'll use, and the pack that
+        fits.
+      </p>
     </div>
   </section>
-  <!-- Phase 2 fills the remaining sections per content.md -->
+
+  <!-- Sticky in-page sub-nav (scroll-spy; horizontal chip scroller on mobile) -->
+  <nav class="subnav" aria-label="Application segments" data-subnav>
+    <div class="container subnav-track">
+      {segments.map((seg) => (
+        <a class="subnav-chip" href={`#${seg.id}`} data-subnav-link>{seg.label}</a>
+      ))}
+    </div>
+  </nav>
+
+  <!-- Segment chapters -->
+  {segments.map((seg, i) => {
+    const Scene = scenes[seg.id];
+    return (
+      <section
+        id={seg.id}
+        class:list={['chapter', { 'cv-auto': i > 0 }]}
+        data-segment
+        aria-labelledby={`${seg.id}-heading`}
+      >
+        <div class="chapter-scene" data-scene>
+          <div class="scene-art" data-scene-art data-reveal>
+            <Scene />
+          </div>
+          <div class="scene-scrim" aria-hidden="true"></div>
+          <div class="scene-copy">
+            <div class="container container--max">
+              <p class:list={['chip', 'tnum', seg.leaf ? 'chip--leaf' : 'chip--dark']} data-reveal>
+                {seg.leaf && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.6 4.4c-9.3 0-14.9 5.6-14.9 11.7 0 1.2.2 2.3.7 3.3 9.2-.4 14.2-6.7 14.2-15Z"/><path d="M5.4 19.4c3.2-5.4 7.6-9.8 14.2-15"/></svg>
+                )}
+                {seg.chip}
+              </p>
+              <h2 class="display-2" id={`${seg.id}-heading`} data-reveal style="--reveal-delay: 1">
+                {seg.heading}
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="chapter-info section--light">
+          <div class="container">
+            <p class="scene-caption small muted" data-reveal>
+              <span class="cap-rule" aria-hidden="true"></span>
+              {seg.caption}
+            </p>
+            <div class="info-grid">
+              <div class="info-copy">
+                {seg.body.map((p) => (
+                  <p data-reveal>{p}</p>
+                ))}
+                {seg.callout && (
+                  <div class="derate-callout" data-derate-callout data-reveal>
+                    <p class="chip chip--warning">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                      Derate warning
+                    </p>
+                    <p>{seg.callout}</p>
+                  </div>
+                )}
+                {seg.after.map((p) => (
+                  <p data-reveal>{p}</p>
+                ))}
+                {seg.storageLink && (
+                  <p class="storage-note small" data-reveal>
+                    <a class="btn--link" href="/what-is-def#storage-handling">
+                      Storage &amp; handling
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                    </a>
+                  </p>
+                )}
+              </div>
+              <aside class="dosing-card" data-reveal style="--reveal-delay: 1">
+                <h3 class="h4 dosing-heading">
+                  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6c3.7 4.5 5.9 7.6 5.9 10.4a5.9 5.9 0 1 1-11.8 0C6.1 10.2 8.3 7.1 12 2.6Z" fill="var(--def-tint)" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                  Dosing guidance
+                </h3>
+                <p class="tnum">{seg.dosing}</p>
+              </aside>
+            </div>
+
+            <div class="packs">
+              <h3 class="h4 packs-heading" data-reveal>Recommended packs</h3>
+              <ul class="pack-row">
+                {seg.packs.map((p, j) => (
+                  <li data-reveal style={`--reveal-delay: ${j}`}>
+                    <a class="card-light pack-card" href={`/products#${p.sku}`}>
+                      <span class="pack-thumb">
+                        <PackVisual sku={p.sku} label={false} size="48px" />
+                      </span>
+                      <span class="pack-meta">
+                        <span class="pack-name">{p.name}</span>
+                        <span class="pack-use small muted">{p.use}</span>
+                      </span>
+                      <svg class="pack-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div class="chapter-cta" data-reveal>
+              <SegmentCta note={seg.note} />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  })}
+
+  <!-- Closing cross-segment CTA band (design.md §4.4; generic §2.5 microcopy only) -->
+  <section class="section--dark closing-cta cv-auto">
+    <div class="container">
+      <CtaRow theme="dark" align="center" />
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  section[id] {
+    scroll-margin-top: calc(var(--header-h-mobile) + 84px);
+  }
+
+  /* ---------- Page hero ---------- */
+  .app-hero {
+    position: relative;
+    overflow: hidden;
+    padding-top: calc(var(--header-h-mobile) + var(--sp-9));
+    padding-bottom: var(--sp-9);
+  }
+  @media (min-width: 1024px) {
+    .app-hero {
+      padding-top: calc(var(--header-h) + var(--sp-9));
+    }
+  }
+  .app-hero h1 {
+    margin-top: var(--sp-4);
+    max-width: 18ch;
+  }
+  .app-intro {
+    margin-top: var(--sp-5);
+    max-width: 58ch;
+  }
+  .hero-hexes {
+    position: absolute;
+    top: clamp(4rem, 10vw, 7rem);
+    right: clamp(-2rem, 2vw, 4rem);
+    width: clamp(160px, 22vw, 280px);
+    height: auto;
+    pointer-events: none;
+  }
+
+  /* ---------- Sticky sub-nav ---------- */
+  .subnav {
+    position: sticky;
+    top: var(--header-h-mobile);
+    z-index: 90;
+    background: rgba(6, 11, 20, 0.85);
+    border-top: 1px solid var(--hairline-dark);
+    border-bottom: 1px solid var(--hairline-dark);
+  }
+  @supports (backdrop-filter: blur(14px)) {
+    .subnav {
+      background: rgba(6, 11, 20, 0.65);
+      backdrop-filter: blur(14px) saturate(1.2);
+    }
+  }
+  @media (min-width: 1024px) {
+    .subnav {
+      top: var(--header-h-shrunk);
+    }
+  }
+  .subnav-track {
+    display: flex;
+    gap: var(--sp-2);
+    padding-block: var(--sp-3);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  }
+  .subnav-track::-webkit-scrollbar {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .subnav-track {
+      justify-content: center;
+    }
+  }
+  .subnav-chip {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    min-height: 48px;
+    padding: 10px 20px;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--hairline-dark);
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+  }
+  .subnav-chip:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+  .subnav-chip.is-active {
+    background: var(--def-tint);
+    color: var(--def-400);
+    border-color: rgba(47, 182, 233, 0.4);
+  }
+
+  /* ---------- Chapter scene band ---------- */
+  .chapter-scene {
+    position: relative;
+    overflow: hidden;
+    background: var(--ink-950);
+    color: #fff;
+    border-top: 1px solid var(--hairline-dark);
+    aspect-ratio: 16 / 10;
+    min-height: 420px;
+    max-height: 78svh;
+  }
+  @media (min-width: 768px) {
+    .chapter-scene {
+      aspect-ratio: 16 / 7;
+      min-height: 440px;
+    }
+  }
+  .scene-art {
+    position: absolute;
+    inset: 0;
+    transform-origin: center;
+  }
+  .scene-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(6, 11, 20, 0.55) 0%,
+      rgba(6, 11, 20, 0.2) 45%,
+      rgba(6, 11, 20, 0.82) 100%
+    );
+    pointer-events: none;
+  }
+  .scene-copy {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: clamp(1.5rem, 4vw, 3rem);
+  }
+  .scene-copy .display-2 {
+    margin-top: var(--sp-4);
+    max-width: 20ch;
+    text-wrap: balance;
+  }
+  /* Entry beat: art settles 1.06 → 1 on reveal (full/lite; opacity kept at 1
+     so the first chapter scene — the page's LCP visual — never starts hidden). */
+  :global(html[data-tier='full']) .scene-art[data-reveal],
+  :global(html[data-tier='lite']) .scene-art[data-reveal] {
+    opacity: 1;
+    transform: scale(1.06);
+    transition: transform 1.2s var(--ease-out);
+  }
+  :global(html[data-tier='full']) .scene-art[data-reveal].is-revealed,
+  :global(html[data-tier='lite']) .scene-art[data-reveal].is-revealed {
+    transform: scale(1);
+  }
+  :global(html[data-tier='static']) .scene-art[data-reveal] {
+    animation: none;
+  }
+
+  /* ---------- Chapter info band ---------- */
+  .chapter .chapter-info {
+    padding-block: clamp(3rem, 7vw, 6rem);
+  }
+  .scene-caption {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-6);
+    max-width: 76ch;
+  }
+  .cap-rule {
+    flex: 0 0 28px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--grad-liquid);
+  }
+  .info-grid {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .info-grid {
+      grid-template-columns: 7fr 5fr;
+      gap: var(--sp-8);
+    }
+  }
+  .info-copy p {
+    max-width: 65ch;
+  }
+  .info-copy > p + p,
+  .info-copy > p + .derate-callout,
+  .info-copy > .derate-callout + p {
+    margin-top: var(--sp-4);
+  }
+  .storage-note {
+    margin-top: var(--sp-5);
+  }
+  .storage-note .btn--link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    color: var(--blue-600);
+    text-decoration: none;
+  }
+
+  /* Dosing guidance callout */
+  .dosing-card {
+    background: #fff;
+    border-radius: var(--r-lg);
+    box-shadow: var(--e-1);
+    border-left: 3px solid var(--def-400);
+    padding: var(--sp-6);
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .dosing-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .dosing-card p {
+    color: var(--slate-500);
+    max-width: 52ch;
+  }
+
+  /* Derate warning callout (transport) */
+  .derate-callout {
+    background: #fff;
+    border: 1.5px solid var(--warning);
+    border-radius: var(--r-md);
+    padding: var(--sp-5);
+    display: grid;
+    gap: var(--sp-3);
+    justify-items: start;
+  }
+  .derate-callout p:not(.chip) {
+    color: var(--ink-900);
+    max-width: 60ch;
+  }
+  /* One-time attention pulse on entry (design.md §4.4) — full/lite only */
+  :global(html[data-tier='full']) .derate-callout.is-revealed,
+  :global(html[data-tier='lite']) .derate-callout.is-revealed {
+    animation: derate-pulse 0.8s var(--ease-out-soft) 0.5s 2;
+  }
+  @keyframes derate-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(245, 165, 36, 0);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgba(245, 165, 36, 0.25);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .derate-callout {
+      animation: none !important;
+    }
+  }
+
+  /* Recommended-pack mini cards */
+  .packs {
+    margin-top: var(--sp-7);
+  }
+  .packs-heading {
+    margin-bottom: var(--sp-4);
+  }
+  .pack-row {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-4);
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  }
+  .pack-card {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    min-height: 72px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .pack-thumb {
+    flex: 0 0 48px;
+  }
+  .pack-meta {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .pack-name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+    color: var(--ink-900);
+  }
+  .pack-arrow {
+    margin-left: auto;
+    flex: 0 0 auto;
+    color: var(--blue-600);
+    transition: transform var(--t-base) var(--ease-out-soft);
+  }
+  @media (hover: hover) {
+    .pack-card:hover .pack-arrow {
+      transform: translateX(4px);
+    }
+  }
+
+  .chapter-cta {
+    margin-top: var(--sp-7);
+  }
+
+  /* ---------- Closing CTA band ---------- */
+  .closing-cta {
+    padding-block: var(--section-pad-strip);
+  }
+</style>
+
+<script>
+  // Sub-nav scroll-spy: a thin mid-viewport band decides the active segment;
+  // chips get .is-active + aria-current, and the mobile chip scroller keeps
+  // the active chip in view. Pure enhancement — without JS the chips remain
+  // plain anchor links.
+  const subnav = document.querySelector('[data-subnav]');
+  if (subnav && 'IntersectionObserver' in window) {
+    const links = Array.from(subnav.querySelectorAll('[data-subnav-link]'));
+    const track = subnav.querySelector('.subnav-track');
+    const byId = new Map();
+    for (const link of links) {
+      const id = (link.getAttribute('href') || '').slice(1);
+      const section = id && document.getElementById(id);
+      if (section) byId.set(section, link);
+    }
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const setActive = (active) => {
+      for (const link of links) {
+        const on = link === active;
+        link.classList.toggle('is-active', on);
+        if (on) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      }
+      if (active && track && track.scrollWidth > track.clientWidth) {
+        const left = active.offsetLeft - (track.clientWidth - active.offsetWidth) / 2;
+        track.scrollTo({ left, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      }
+    };
+    const spy = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(byId.get(entry.target));
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px', threshold: 0 }
+    );
+    byId.forEach((_link, section) => spy.observe(section));
+  }
+</script>

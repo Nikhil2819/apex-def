@@ -1,0 +1,91 @@
+---
+// #gensets chapter scene (design.md §4.4 / DECISIONS.md #18): authored vector
+// genset plant-room silhouette — cool industrial gradient, brand palette,
+// 1.5px strokes, urea-hexagon motif, PackVisual gradient language.
+---
+
+<svg
+  class="scene-svg"
+  viewBox="0 0 800 350"
+  preserveAspectRatio="xMidYMid slice"
+  role="img"
+  aria-label="Illustration: CPCB IV+ genset plant room with two DG sets and a DEF drum"
+>
+  <defs>
+    <linearGradient id="ge-wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A1B3D"></stop>
+      <stop offset="1" stop-color="#060B14"></stop>
+    </linearGradient>
+    <linearGradient id="ge-floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B1524"></stop>
+      <stop offset="1" stop-color="#060B14"></stop>
+    </linearGradient>
+    <linearGradient id="ge-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B4F9C"></stop>
+      <stop offset="1" stop-color="#0A1B3D"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- wall with panel seams -->
+  <rect x="0" y="0" width="800" height="262" fill="url(#ge-wall)"></rect>
+  <path d="M100 0V262M240 0V262M380 0V262M520 0V262M660 0V262" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"></path>
+
+  <!-- urea hexagon motif -->
+  <g stroke="rgba(47,182,233,0.14)" stroke-width="1.5" fill="none">
+    <path d="M596 38l14 8v16l-14 8-14-8V46Z"></path>
+    <path d="M632 60l11 6.4v12.8L632 85.6l-11-6.4V66.4Z"></path>
+    <path d="M604 84l9 5.2v10.4l-9 5.2-9-5.2V89.2Z"></path>
+  </g>
+
+  <!-- louvred vent strip -->
+  <rect x="140" y="34" width="280" height="14" rx="4" fill="rgba(47,182,233,0.08)" stroke="rgba(47,182,233,0.28)" stroke-width="1.5"></rect>
+  <path d="M164 34v14M196 34v14M228 34v14M260 34v14M292 34v14M324 34v14M356 34v14M388 34v14" stroke="rgba(47,182,233,0.2)" stroke-width="1.5"></path>
+
+  <!-- cable tray -->
+  <path d="M60 122H740" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"></path>
+  <path d="M120 122v-10M280 122v-10M440 122v-10M600 122v-10" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"></path>
+
+  <!-- exhaust ducts -->
+  <rect x="296" y="78" width="20" height="74" fill="#0A1B3D" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+  <rect x="292" y="70" width="28" height="8" rx="3" fill="#0A1B3D" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+  <rect x="536" y="106" width="16" height="50" fill="#0A1B3D" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+
+  <!-- floor -->
+  <rect x="0" y="262" width="800" height="88" fill="url(#ge-floor)"></rect>
+  <path d="M0 262h800" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></path>
+  <path d="M24 336h752" stroke="#F5A524" stroke-width="1.5" stroke-dasharray="20 14" opacity="0.3"></path>
+
+  <!-- genset A -->
+  <rect x="172" y="262" width="258" height="10" rx="2" fill="#0A1B3D"></rect>
+  <rect x="180" y="152" width="242" height="110" rx="8" fill="url(#ge-body)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></rect>
+  <path d="M198 172h64M198 186h64M198 200h64M198 214h64M198 228h64M198 242h64" stroke="rgba(6,11,20,0.45)" stroke-width="1.5"></path>
+  <rect x="286" y="176" width="56" height="22" rx="3" fill="#FFFFFF" stroke="rgba(10,27,61,0.1)" stroke-width="1.5"></rect>
+  <path d="M314 181c2 2.5 3.2 4.3 3.2 5.8a3.2 3.2 0 1 1-6.4 0c0-1.5 1.2-3.3 3.2-5.8Z" fill="#1B4F9C"></path>
+  <rect x="366" y="170" width="40" height="52" rx="4" fill="#060B14" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"></rect>
+  <circle cx="378" cy="184" r="5" fill="none" stroke="#2FB6E9" stroke-width="1.5"></circle>
+  <circle cx="394" cy="184" r="5" fill="none" stroke="#2FB6E9" stroke-width="1.5"></circle>
+  <path d="M374 202h24M374 210h16" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round"></path>
+  <circle cx="414" cy="162" r="3" fill="#2FB6E9"></circle>
+  <circle cx="414" cy="162" r="6" fill="none" stroke="rgba(47,182,233,0.35)" stroke-width="1.5"></circle>
+
+  <!-- DEF drum between the sets -->
+  <rect x="434" y="218" width="26" height="44" rx="4" fill="url(#ge-body)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></rect>
+  <rect x="434" y="218" width="26" height="5" rx="2.5" fill="#2FB6E9"></rect>
+  <rect x="439" y="232" width="16" height="14" rx="2" fill="#FFFFFF"></rect>
+
+  <!-- genset B -->
+  <rect x="462" y="262" width="190" height="8" rx="2" fill="#0A1B3D"></rect>
+  <rect x="470" y="182" width="174" height="80" rx="7" fill="url(#ge-body)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></rect>
+  <path d="M484 198h44M484 210h44M484 222h44M484 234h44" stroke="rgba(6,11,20,0.45)" stroke-width="1.5"></path>
+  <rect x="604" y="196" width="28" height="38" rx="3" fill="#060B14" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"></rect>
+  <circle cx="618" cy="208" r="4.5" fill="none" stroke="#2FB6E9" stroke-width="1.5"></circle>
+  <circle cx="636" cy="190" r="2.5" fill="#2FB6E9"></circle>
+</svg>
+
+<style>
+  .scene-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>

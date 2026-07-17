@@ -1,0 +1,123 @@
+---
+// #transport chapter scene (design.md §4.4 / DECISIONS.md #18): authored vector
+// BS-VI truck-convoy silhouette at dusk — brand palette, 1.5px strokes,
+// PackVisual gradient language. 16:7 canvas, slice-cropped to 16:10 on mobile.
+---
+
+<svg
+  class="scene-svg"
+  viewBox="0 0 800 350"
+  preserveAspectRatio="xMidYMid slice"
+  role="img"
+  aria-label="Illustration: BS-VI truck convoy on a dusk highway"
+>
+  <defs>
+    <linearGradient id="tr-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#060B14"></stop>
+      <stop offset="0.55" stop-color="#0A1B3D"></stop>
+      <stop offset="1" stop-color="#16407E"></stop>
+    </linearGradient>
+    <linearGradient id="tr-glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2FB6E9" stop-opacity="0"></stop>
+      <stop offset="1" stop-color="#2FB6E9" stop-opacity="0.16"></stop>
+    </linearGradient>
+    <linearGradient id="tr-road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B1524"></stop>
+      <stop offset="1" stop-color="#060B14"></stop>
+    </linearGradient>
+    <linearGradient id="tr-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B4F9C"></stop>
+      <stop offset="1" stop-color="#0A1B3D"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- dusk sky + horizon glow -->
+  <rect x="0" y="0" width="800" height="250" fill="url(#tr-sky)"></rect>
+  <rect x="0" y="176" width="800" height="74" fill="url(#tr-glow)"></rect>
+
+  <!-- distant ridge + roadside masts -->
+  <path d="M0 250C140 238 300 246 460 242C600 239 720 246 800 243L800 250Z" fill="#0A1B3D" opacity="0.9"></path>
+  <g stroke="rgba(255,255,255,0.14)" stroke-width="1.5" stroke-linecap="round">
+    <path d="M560 250V206M552 212h16M554 222h12"></path>
+    <path d="M652 250V214M646 219h12M648 228h8"></path>
+  </g>
+  <circle cx="560" cy="203" r="2" fill="#2FB6E9" opacity="0.5"></circle>
+  <circle cx="652" cy="211" r="2" fill="#2FB6E9" opacity="0.5"></circle>
+
+  <!-- road -->
+  <rect x="0" y="250" width="800" height="100" fill="url(#tr-road)"></rect>
+  <path d="M0 258h800" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></path>
+  <path d="M40 322h720" stroke="rgba(255,255,255,0.22)" stroke-width="2" stroke-dasharray="30 26" stroke-linecap="round"></path>
+
+  <!-- far truck -->
+  <g opacity="0.75">
+    <rect x="682" y="236" width="84" height="42" rx="4" fill="url(#tr-body)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+    <rect x="656" y="252" width="24" height="26" rx="4" fill="url(#tr-body)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+    <rect x="654" y="278" width="112" height="5" fill="#0A1B3D"></rect>
+    <circle cx="664" cy="284" r="7" fill="#0A1B3D" stroke="#8FA3B8" stroke-width="1.5"></circle>
+    <circle cx="696" cy="284" r="7" fill="#0A1B3D" stroke="#8FA3B8" stroke-width="1.5"></circle>
+    <circle cx="748" cy="284" r="7" fill="#0A1B3D" stroke="#8FA3B8" stroke-width="1.5"></circle>
+  </g>
+
+  <!-- mid truck -->
+  <rect x="508" y="216" width="128" height="64" rx="5" fill="url(#tr-body)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+  <path d="M530 224v48M556 224v48M582 224v48M608 224v48" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"></path>
+  <rect x="464" y="280" width="172" height="7" fill="#0A1B3D"></rect>
+  <rect x="466" y="240" width="36" height="40" rx="6" fill="url(#tr-body)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+  <rect x="471" y="246" width="20" height="15" rx="3" fill="rgba(47,182,233,0.14)" stroke="rgba(47,182,233,0.4)" stroke-width="1.5"></rect>
+  <rect x="464" y="264" width="3" height="7" rx="1.5" fill="#2FB6E9" opacity="0.8"></rect>
+  <g fill="#0A1B3D" stroke="#8FA3B8" stroke-width="1.5">
+    <circle cx="480" cy="292" r="11"></circle>
+    <circle cx="522" cy="292" r="11"></circle>
+    <circle cx="540" cy="292" r="11"></circle>
+    <circle cx="604" cy="292" r="11"></circle>
+    <circle cx="622" cy="292" r="11"></circle>
+  </g>
+  <g fill="#8FA3B8">
+    <circle cx="480" cy="292" r="3"></circle>
+    <circle cx="522" cy="292" r="3"></circle>
+    <circle cx="540" cy="292" r="3"></circle>
+    <circle cx="604" cy="292" r="3"></circle>
+    <circle cx="622" cy="292" r="3"></circle>
+  </g>
+
+  <!-- lead truck -->
+  <rect x="218" y="178" width="204" height="104" rx="6" fill="url(#tr-body)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></rect>
+  <path d="M246 186v88M270 186v88M294 186v88M318 186v88M342 186v88M366 186v88M390 186v88" stroke="rgba(255,255,255,0.07)" stroke-width="1.5"></path>
+  <circle cx="238" cy="172" r="2.2" fill="#2FB6E9" opacity="0.7"></circle>
+  <circle cx="320" cy="172" r="2.2" fill="#2FB6E9" opacity="0.7"></circle>
+  <circle cx="402" cy="172" r="2.2" fill="#2FB6E9" opacity="0.7"></circle>
+  <rect x="212" y="196" width="5" height="86" fill="#0A1B3D" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"></rect>
+  <rect x="148" y="282" width="274" height="10" fill="#0A1B3D"></rect>
+  <rect x="152" y="216" width="56" height="66" rx="8" fill="url(#tr-body)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"></rect>
+  <rect x="160" y="224" width="34" height="24" rx="3" fill="rgba(47,182,233,0.14)" stroke="rgba(47,182,233,0.45)" stroke-width="1.5"></rect>
+  <!-- side tank with DEF cap -->
+  <rect x="246" y="286" width="40" height="12" rx="6" fill="#0A1B3D" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"></rect>
+  <circle cx="255" cy="292" r="3" fill="#2FB6E9"></circle>
+  <!-- headlight + beam -->
+  <rect x="148" y="258" width="4" height="10" rx="2" fill="#2FB6E9"></rect>
+  <path d="M148 258L96 272v12l52-6Z" fill="rgba(47,182,233,0.1)"></path>
+  <!-- wheels -->
+  <g fill="#0A1B3D" stroke="#8FA3B8" stroke-width="1.5">
+    <circle cx="172" cy="300" r="17"></circle>
+    <circle cx="236" cy="300" r="17"></circle>
+    <circle cx="262" cy="300" r="17"></circle>
+    <circle cx="372" cy="300" r="17"></circle>
+    <circle cx="398" cy="300" r="17"></circle>
+  </g>
+  <g fill="#8FA3B8">
+    <circle cx="172" cy="300" r="5"></circle>
+    <circle cx="236" cy="300" r="5"></circle>
+    <circle cx="262" cy="300" r="5"></circle>
+    <circle cx="372" cy="300" r="5"></circle>
+    <circle cx="398" cy="300" r="5"></circle>
+  </g>
+</svg>
+
+<style>
+  .scene-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>

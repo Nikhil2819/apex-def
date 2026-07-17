@@ -1,5 +1,179 @@
 ---
+// Home — content.md §3.1 (copy verbatim), design.md §4.1 (layout/backgrounds/motion).
+// Static-first build: complete, readable and convertible with JS disabled.
+// Contracts for the later signature motion pass:
+//   - data-reveal + --reveal-delay   → global IO entrance system (app.js)
+//   - data-counter="N"               → global counter system (app.js), numerals only
+//   - data-rail                     → #products scroll-snap rail (later desktop pin/scrub)
+//   - data-nox-loop                 → #how-it-works particle loop (pure CSS today)
+//   - data-marquee + .marquee-track → #marquee pure-CSS loop; motion.js drives
+//                                     --marquee-rate / skew on the full tier
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import Faq from '../components/Faq.astro';
+import PackVisual from '../components/PackVisual.astro';
+import HeroScene from '../components/HeroScene.astro';
+import AppScene from '../components/home/AppScene.astro';
+import NoxLoop from '../components/home/NoxLoop.astro';
+import { site, skus, waLink } from '../data/site.js';
+import { graph, organization, webSite } from '../utils/schema.js';
+
+const primaryPhone = site.phones.find((p) => p.primary) ?? site.phones[0];
+const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(site.address.mapsQuery)}`;
+const bisFootnote =
+  'Manufactured to IS 17042 (Part 1); BIS licence details will be displayed on grant.';
+
+/* ---------- Shared inline icons (Lucide-style 1.5px strokes, §2.5) ---------- */
+const phoneIcon =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+const whatsappIcon =
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.3-.7.8-.8 1-.2.2-.3.2-.6.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.1-.7l.5-.6c.1-.2.1-.3.2-.5s0-.4 0-.5c0-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3a3 3 0 0 0-1 2.2c0 1.3 1 2.6 1.1 2.8.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>';
+const mapPinIcon =
+  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
+const copyIcon =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+// Custom hexagon-badge-with-check (cert chips, §2.5 custom icon set).
+const sealIcon =
+  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4.6v9.2L12 22l-8-6.2V6.6Z" opacity="0.55"/><path d="M8.6 12.2l2.4 2.4 4.4-5"/></svg>';
+
+/* ---------- Motif partials (§2.6) ---------- */
+const hexCluster = (id: string) =>
+  `<svg viewBox="0 0 360 290" fill="none" aria-hidden="true"><defs><path id="${id}" d="M50 0l43.3 25v50L50 100 6.7 75V25Z"/></defs><g stroke="#FFFFFF" stroke-width="1.5"><use href="#${id}" x="60" y="10"/><use href="#${id}" x="160" y="66"/><use href="#${id}" x="60" y="122"/><use href="#${id}" x="160" y="178"/><use href="#${id}" x="260" y="122"/></g></svg>`;
+const liquidLine = (id: string) =>
+  `<svg viewBox="0 0 1440 240" preserveAspectRatio="none" fill="none" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2FB6E9" stop-opacity="0"/><stop offset="0.5" stop-color="#2FB6E9" stop-opacity="0.6"/><stop offset="1" stop-color="#2FB6E9" stop-opacity="0"/></linearGradient></defs><path d="M0 140C180 60 420 200 720 130S1200 40 1440 120" stroke="url(#${id})" stroke-width="2"/></svg>`;
+const marqueeDrop =
+  '<svg width="10" height="14" viewBox="0 0 22 28" fill="none" aria-hidden="true"><path d="M11 2C11 2 20 12.4 20 18.6A9 9 0 0 1 2 18.6C2 12.4 11 2 11 2Z" fill="rgba(47,182,233,0.45)"/></svg>';
+
+/* ---------- Phosphor-Duotone-style USP icons (back layer def-tint, front 1.5px blue-600) ---------- */
+const TINT = 'rgba(47,182,233,0.12)';
+const STROKE = '#1B4F9C';
+const duo = (back: string, front: string) =>
+  `<svg width="36" height="36" viewBox="0 0 32 32" fill="none" aria-hidden="true">${back}` +
+  `<g stroke="${STROKE}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">${front}</g></svg>`;
+
+const uspIcons: Record<string, string> = {
+  factory: duo(
+    `<path d="M5 13.5l7 4.5v-4.5l7 4.5v-4.5l8 4.5V27H5Z" fill="${TINT}"/>`,
+    '<path d="M5 27V13.5l7 4.5v-4.5l7 4.5v-4.5l8 4.5V27"/><path d="M3.5 27h25"/><path d="M9 22.5h2M15 22.5h2M21 22.5h2"/><path d="M7 13.5V6h3v7"/>'
+  ),
+  flask: duo(
+    `<path d="M14 12l-7 11.5a2.5 2.5 0 0 0 2.1 4h13.8a2.5 2.5 0 0 0 2.1-4L18 12V6h-4Z" fill="${TINT}"/>`,
+    '<path d="M12.5 4.5h7"/><path d="M14 4.5V12l-7 11.5a2.5 2.5 0 0 0 2.1 4h13.8a2.5 2.5 0 0 0 2.1-4L18 12V4.5"/><path d="M10.5 20.5h11"/><circle cx="13.5" cy="24" r="0.5"/><circle cx="17.5" cy="23" r="0.5"/>'
+  ),
+  truck: duo(
+    `<rect x="4" y="9" width="15" height="12" rx="1.5" fill="${TINT}"/>`,
+    '<rect x="4" y="9" width="15" height="12" rx="1.5"/><path d="M19 13h4.6L28 17.6V21h-9"/><circle cx="10.5" cy="23.5" r="2.75"/><circle cx="22.5" cy="23.5" r="2.75"/>'
+  ),
+  handshake: duo(
+    `<path d="M16 11l6 5-6 5.5-6-5.5Z" fill="${TINT}"/>`,
+    '<path d="M2.5 10.5h5L16 18M29.5 10.5h-5l-4 3.4"/><path d="M16 18l2.4 2.2a2 2 0 0 0 2.8-2.9L16.6 13a3.2 3.2 0 0 0-4.4.1l-2.7 2.6"/><path d="M13.5 21.5l1.6 1.5a1.9 1.9 0 0 0 2.7-2.7"/><path d="M10.5 19.2l1.9 1.8a1.9 1.9 0 0 1-2.7 2.7l-2.2-2.1"/>'
+  ),
+};
+
+/* ---------- Section data (copy verbatim, content.md §3.1) ---------- */
+const stats = [
+  { value: '18', unit: '', label: 'parameters in our published ISO 22241-1 spec — the full table, in the open' },
+  { value: '6', unit: '', label: 'pack sizes, from a 5 L can to tanker supply' },
+  { value: '48', unit: 'h', label: 'doorstep delivery — most orders same-day or next-day' },
+  { value: '100', unit: '%', label: 'of batches cleared by refractometer and density checks before dispatch' },
+];
+
+const appTiles = [
+  {
+    id: 'agriculture',
+    title: 'Agriculture',
+    line: 'TREM IV tractors above 50 HP and combine harvesters. Our first market, still our biggest.',
+    chip: 'Since Jan 2023',
+    wide: true,
+  },
+  {
+    id: 'transport',
+    title: 'Transport',
+    line: 'BS-VI trucks and buses that derate without DEF. Keep the fleet at full torque.',
+    chip: 'Since Apr 2020',
+    wide: false,
+  },
+  {
+    id: 'construction',
+    title: 'Construction & Mining',
+    line: 'CEV IV machines from backhoes to excavators.',
+    chip: 'Since Oct 2021',
+    wide: false,
+  },
+  {
+    id: 'gensets',
+    title: 'Gensets',
+    line: 'CPCB IV+ DG sets up to 800 kW now run SCR — and monitor DEF usage.',
+    chip: 'Since Jul 2023',
+    wide: true,
+  },
+] as const;
+
+const usps = [
+  {
+    icon: 'factory',
+    title: 'Fresh-batch manufacturing',
+    body: "Made to order in Bulandshahr, not warehoused for months. DEF degrades with age and heat; ours doesn't get the chance.",
+  },
+  {
+    icon: 'flask',
+    title: 'Lab-tested, every batch',
+    body: 'Refractometer and density QC clear every batch against the ISO 22241-1 window before a single can is filled. COA on request with every supply.',
+  },
+  {
+    icon: 'truck',
+    title: '48-hour delivery, emergency dispatch',
+    body: 'Most orders reach your gate same-day or next-day; 48 hours at the outside. Fleet running dry on a Sunday? Call — flexible scheduling and emergency dispatch for regular customers.',
+  },
+  {
+    icon: 'handshake',
+    title: 'Dealer & fleet support',
+    body: 'Territory support, fluid-management help for regular buyers, and straight answers on the phone.',
+  },
+];
+
+const specPeekRows = [
+  { param: 'Urea content', value: '31.8–33.2%' },
+  { param: 'Density @20 °C', value: '1.0870–1.0930 g/cm³' },
+  { param: 'Refractive index @20 °C', value: '1.3814–1.3843' },
+  { param: 'Biuret', value: '≤0.3%' },
+];
+
+const marqueeChips = [
+  'ISO 22241-1',
+  'IS 17042 (Part 1)',
+  'AUS 32',
+  '32.5% urea · 67.5% demin water',
+  'Lab-tested every batch',
+  'COA with every supply',
+  'Batch + expiry printed on every pack',
+  'Made in Bulandshahr, UP',
+];
+
+const faqs = [
+  {
+    q: 'What is DEF and does my vehicle need it?',
+    a: 'DEF (Diesel Exhaust Fluid, also called AUS 32) is a 32.5% urea solution injected into the exhaust of SCR-equipped diesels. If your vehicle is a BS-VI truck/bus/car, a TREM IV tractor above 50 HP, a CEV IV machine or a CPCB IV+ genset — it needs DEF to run legally and at full power.',
+  },
+  {
+    q: 'How much DEF will I use?',
+    a: 'Typically 3–6% of your diesel consumption — about 5 litres of DEF per 100 litres of diesel for a BS-VI truck. High-load agricultural duty runs at the upper end.',
+  },
+  {
+    q: 'What happens if I run out?',
+    a: "BS-VI vehicles warn, then derate — power and speed are cut by the ECU until you refill. Don't test it; keep a can in the cab.",
+  },
+  {
+    q: 'How long does DEF last in storage?',
+    a: '12–18 months under proper Indian storage — sealed pack, under 30 °C, away from sunlight. Every APEX pack carries its manufacture and expiry date.',
+  },
+  {
+    q: 'How do I buy APEX D.E.F?',
+    a: `Call or WhatsApp ${primaryPhone.display}, tell us your pack size and location, and we arrange doorstep delivery. No minimums that don't make sense — from a single 5 L can via our dealers to full tanker loads.`,
+  },
+];
+
+const schema = graph(organization(), webSite());
 ---
 
 <BaseLayout
@@ -8,18 +182,1210 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   ogTitle="APEX D.E.F — Diesel Exhaust Fluid, made to the numbers."
   ogDescription="32.5% urea. 67.5% demin water. Zero shortcuts. Lab-tested DEF from Bulandshahr for tractors, trucks, machines and gensets."
   path="/"
+  schema={schema}
 >
-  <section id="hero" class="section--dark" style="min-height: 100svh; display: grid; place-items: center; padding-top: var(--header-h-mobile);">
-    <div class="container" style="text-align: center;">
-      <p class="chip chip--dark" data-reveal>DEF · AUS 32 · Made in India</p>
-      <h1 class="display-1" style="margin-block: var(--sp-5); --reveal-delay: 1;" data-reveal>
-        32.5% urea. 67.5% demin water.<br /><span class="grad-text">Zero shortcuts.</span>
-      </h1>
-      <p class="lead muted" style="max-width: 56ch; margin-inline: auto;" data-reveal>
-        APEX D.E.F manufactures ISO 22241 / IS 17042-grade Diesel Exhaust Fluid in Bulandshahr,
-        Uttar Pradesh — for tractors, trucks, construction machines and gensets across India.
+  <!-- ================= #hero — cinematic dark stage ================= -->
+  <section id="hero" class="section--dark hero">
+    <div class="hero-hex" set:html={hexCluster('hx-hero')} />
+    <div class="container container--max hero-grid">
+      <div class="hero-copy">
+        <p class="chip chip--dark" data-reveal>DEF · AUS 32 · Made in India</p>
+        <h1 class="display-1" data-reveal style="--reveal-delay:1">
+          32.5% urea. 67.5% demin water.<br /><span class="grad-text">Zero shortcuts.</span>
+        </h1>
+        <p class="lead muted hero-sub" data-reveal style="--reveal-delay:2">
+          APEX D.E.F manufactures ISO 22241 / IS 17042-grade Diesel Exhaust Fluid in Bulandshahr,
+          Uttar Pradesh — for tractors, trucks, construction machines and gensets across India.
+        </p>
+        <div class="hero-ctas" data-reveal style="--reveal-delay:3">
+          <a class="btn btn--primary-dark" href={`tel:${primaryPhone.tel}`}>
+            <span class="btn-ic" set:html={phoneIcon} /> Call Now
+          </a>
+          <a class="btn btn--secondary-dark" href="/products">Explore Products</a>
+        </div>
+        <ul class="cert-chips" role="list" data-reveal style="--reveal-delay:4">
+          <li class="chip chip--dark"><span class="chip-ic" set:html={sealIcon} /> ISO 22241-1</li>
+          <li class="chip chip--dark"><span class="chip-ic" set:html={sealIcon} /> IS 17042 (Part 1)</li>
+          <li class="chip chip--dark"><span class="chip-ic" set:html={sealIcon} /> BIS*</li>
+        </ul>
+        <p class="cert-note" data-reveal style="--reveal-delay:5">*&nbsp;{bisFootnote}</p>
+      </div>
+      <div class="hero-visual" data-reveal style="--reveal-delay:2">
+        <HeroScene />
+      </div>
+    </div>
+    <a class="scroll-cue" href="#intro">
+      <svg width="16" height="20" viewBox="0 0 22 28" fill="none" aria-hidden="true">
+        <defs>
+          <clipPath id="cue-clip">
+            <path d="M11 2C11 2 20 12.4 20 18.6A9 9 0 0 1 2 18.6C2 12.4 11 2 11 2Z"></path>
+          </clipPath>
+        </defs>
+        <g clip-path="url(#cue-clip)">
+          <rect class="cue-fill" x="0" y="0" width="22" height="28" fill="rgba(47,182,233,0.55)"></rect>
+        </g>
+        <path d="M11 2C11 2 20 12.4 20 18.6A9 9 0 0 1 2 18.6C2 12.4 11 2 11 2Z" stroke="#2FB6E9" stroke-width="1.5"></path>
+      </svg>
+      <span class="overline">Scroll</span>
+    </a>
+    <div class="seam-liquid hero-seam" aria-hidden="true"></div>
+  </section>
+
+  <!-- ================= #intro — brand strip ================= -->
+  <section id="intro" class="section--light" aria-labelledby="intro-h">
+    <div class="container intro-wrap">
+      <SectionHeader
+        overline="What is APEX D.E.F"
+        heading='<span class="grad-text">Agriculture first.</span> Every SCR engine after.'
+        align="center"
+        id="intro-h"
+      />
+      <p class="intro-body" data-reveal style="--reveal-delay:2">
+        APEX D.E.F is the Diesel Exhaust Fluid brand of Apex Environment Solutions — built in
+        Bulandshahr for India's fields first. TREM IV made DEF a daily input for every new tractor
+        above 50 HP; we made it as easy to buy as diesel. The same fluid runs BS-VI trucks and
+        buses, CEV IV construction machines and CPCB IV+ gensets. One spec. Six pack sizes. A phone
+        call away.
       </p>
+      <div class="intro-foot" data-reveal style="--reveal-delay:3">
+        <span class="chip chip--leaf">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4c0 10-6 16-14 16C6 10 12 4 20 4Z"/><path d="M6 20c2.5-5.5 6.5-9.5 11-12"/></svg>
+          Apex Environment Solutions
+        </span>
+        <a class="btn btn--link" href="/about">Know the company →</a>
+      </div>
     </div>
   </section>
-  <!-- Phase 2 fills: #intro #stats #products #applications #how-it-works #why-apex #quality #marquee #faq #dealer-cta #contact-strip -->
+
+  <!-- ================= #stats — counter band ================= -->
+  <section id="stats" class="stats-band" aria-label="APEX D.E.F in numbers">
+    <div class="stats-line" set:html={liquidLine('stats-liquid')} />
+    <div class="container container--max">
+      <div class="stats-grid">
+        {stats.map((s, i) => (
+          <div class="stat-cell" data-reveal style={`--reveal-delay:${i}`}>
+            <p class="stat-num">
+              <span class="tnum" data-counter={s.value}>{s.value}</span>
+              {s.unit && <span class="stat-unit">{s.unit}</span>}
+            </p>
+            <p class="stat-label overline">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= #products — pack rail ================= -->
+  <section id="products" class="section--light hairline-top-light cv-auto" aria-labelledby="products-h">
+    <div class="container">
+      <div class="products-head">
+        <SectionHeader
+          overline="Product Range"
+          heading="One fluid. Six packs. Every duty cycle."
+          lead="The fluid never changes — every pack carries the same ISO 22241 / IS 17042 spec. Pick the size that matches how you run."
+          id="products-h"
+        />
+        <a class="btn btn--link rail-cta" href="/products" data-reveal>See all packs &amp; full spec →</a>
+      </div>
+    </div>
+    <div class="rail-wrap">
+      <div class="rail container" data-rail role="list">
+        {skus.map((sku, i) => (
+          <article class="card-light rail-card" role="listitem" data-reveal style={`--reveal-delay:${Math.min(i, 4)}`}>
+            <div class="rail-media" style={`view-transition-name: sku-${sku.id}`}>
+              <PackVisual sku={sku.id} size="68%" />
+            </div>
+            <h3 class="h4">
+              <a class="rail-card-link" href={`/products#${sku.id}`}>{sku.pack}</a>
+            </h3>
+            <p class="small muted rail-line">{sku.oneLiner}</p>
+            <a class="btn btn--secondary-light rail-call" href={`tel:${primaryPhone.tel}`}>
+              <span class="btn-ic" set:html={phoneIcon} /> Call for Price
+            </a>
+          </article>
+        ))}
+      </div>
+      <div class="rail-fade rail-fade--left" aria-hidden="true"></div>
+      <div class="rail-fade rail-fade--right" aria-hidden="true"></div>
+    </div>
+    <div class="rail-dots" data-rail-dots aria-label="Product packs" hidden></div>
+  </section>
+
+  <!-- ================= #applications — 4-segment teaser ================= -->
+  <section id="applications" class="section--dark cv-auto" aria-labelledby="apps-h">
+    <div class="container">
+      <SectionHeader overline="Applications" heading="Wherever diesel works, DEF works." id="apps-h" />
+      <div class="apps-grid">
+        {appTiles.map((t, i) => (
+          <a
+            class:list={['app-card', { 'is-wide': t.wide }]}
+            href={`/applications#${t.id}`}
+            data-reveal
+            style={`--reveal-delay:${i}`}
+          >
+            <div class="app-art"><AppScene scene={t.id} /></div>
+            <div class="app-scrim" aria-hidden="true"></div>
+            <span class="app-arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+            <div class="app-content">
+              <h3>{t.title}</h3>
+              <p class="small app-line">{t.line}</p>
+              <span class="chip chip--dark tnum">{t.chip}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+      <div class="apps-cta" data-reveal>
+        <a class="btn btn--link" href="/applications">Find your segment →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= #how-it-works — SCR teaser ================= -->
+  <section id="how-it-works" class="section--dark hairline-top-dark cv-auto" aria-labelledby="hiw-h">
+    <div class="hiw-hex" set:html={hexCluster('hx-hiw')} />
+    <div class="container hiw-grid">
+      <div class="hiw-copy">
+        <p class="overline" data-reveal>The Science</p>
+        <h2 class="display-2" id="hiw-h" data-reveal style="--reveal-delay:1">
+          NOx goes in. Nitrogen and water come out.
+        </h2>
+        <p class="muted" data-reveal style="--reveal-delay:2">
+          Inside every SCR system, DEF turns harmful nitrogen oxides into the same nitrogen and
+          water vapour that make up clean air. Scroll through the full pipeline — from injection to
+          catalyst — in 60 seconds.
+        </p>
+        <a class="btn btn--link" href="/what-is-def#scr" data-reveal style="--reveal-delay:3">Learn How SCR Works</a>
+      </div>
+      <div class="hiw-panel" data-reveal style="--reveal-delay:2">
+        <NoxLoop />
+        <p class="small hiw-caption">
+          Red NOx particles meet DEF droplets and leave the tailpipe as N₂ + H₂O.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= #why-apex — USP grid ================= -->
+  <section id="why-apex" class="section--light cv-auto" aria-labelledby="why-h">
+    <div class="container">
+      <SectionHeader overline="Why APEX" heading="Every batch lab-tested. Every litre traceable." id="why-h" />
+      <ul class="usp-grid" role="list">
+        {usps.map((u, i) => (
+          <li class="card-light usp-card" data-reveal style={`--reveal-delay:${i}`}>
+            <span class="usp-icon" set:html={uspIcons[u.icon]} />
+            <h3 class="h4">{u.title}</h3>
+            <p class="small muted">{u.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= #quality — quality & compliance band ================= -->
+  <section id="quality" class="section--dark cv-auto" aria-labelledby="quality-h">
+    <div class="quality-hex" set:html={hexCluster('hx-quality')} />
+    <div class="container quality-grid">
+      <div class="quality-copy">
+        <p class="overline" data-reveal>Quality &amp; Compliance</p>
+        <h2 class="display-2" id="quality-h" data-reveal style="--reveal-delay:1">
+          We publish our spec. Ask others for theirs.
+        </h2>
+        <p class="muted" data-reveal style="--reveal-delay:2">
+          Most DEF sellers claim ISO 22241. We print the table — urea 31.8–33.2%, density
+          1.0870–1.0930 g/cm³ at 20 °C, metals held to fractions of a ppm — and our own lab clears
+          every batch against it before dispatch, with full-specification analysis on a defined
+          cadence.
+        </p>
+        <ul class="cert-chips" role="list" data-reveal style="--reveal-delay:3">
+          <li class="chip chip--dark">ISO 22241-1</li>
+          <li class="chip chip--dark">IS 17042 (Part 1)</li>
+          <li class="chip chip--dark">BIS*</li>
+        </ul>
+        <p class="cert-note" data-reveal style="--reveal-delay:4">*&nbsp;{bisFootnote}</p>
+        <a class="btn btn--link" href="/products#spec-table" data-reveal style="--reveal-delay:5">
+          See the full spec table →
+        </a>
+      </div>
+      <div class="spec-peek" data-reveal style="--reveal-delay:2">
+        <dl class="peek-rows">
+          {specPeekRows.map((row) => (
+            <div class="peek-row">
+              <dt>{row.param}</dt>
+              <dd class="tnum">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <details class="peek-more">
+          <summary>
+            <span class="peek-row peek-row--hidden">
+              <span class="peek-param">Copper</span>
+              <span class="tnum peek-value">≤0.2 mg/kg</span>
+            </span>
+          </summary>
+          <p class="small peek-caption">the catalyst poison we hold to a fifth of a ppm</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= #marquee — certification strip ================= -->
+  <section id="marquee" class="marquee-band" data-marquee aria-label="Standards and quality">
+    <div class="marquee-inner">
+      <ul class="marquee-track" role="list">
+        {marqueeChips.map((chip) => (
+          <li>
+            <span class="marquee-chip tnum">{chip}</span>
+            <span class="marquee-sep" set:html={marqueeDrop} />
+          </li>
+        ))}
+      </ul>
+      <ul class="marquee-track" aria-hidden="true">
+        {marqueeChips.map((chip) => (
+          <li>
+            <span class="marquee-chip tnum">{chip}</span>
+            <span class="marquee-sep" set:html={marqueeDrop} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= #faq — top 5 FAQs ================= -->
+  <section id="faq" class="section--light cv-auto" aria-labelledby="faq-h">
+    <div class="container container--narrow">
+      <h2 class="display-2 faq-h" id="faq-h" data-reveal>Straight answers.</h2>
+      <div data-reveal style="--reveal-delay:1">
+        <Faq items={faqs} />
+      </div>
+      <a class="btn btn--link faq-cta" href="/what-is-def#faqs" data-reveal>All 14 FAQs →</a>
+    </div>
+  </section>
+
+  <!-- ================= #dealer-cta — distributor banner ================= -->
+  <section id="dealer-cta" class="section--dark cv-auto" aria-labelledby="dealer-h">
+    <div class="container">
+      <div class="dealer-frame" data-reveal>
+        <div class="dealer-panel">
+          <div class="dealer-line" set:html={liquidLine('dealer-liquid')} />
+          <h2 class="display-2" id="dealer-h" data-reveal style="--reveal-delay:1">
+            DEF demand is compounding. Be the supplier your district calls.
+          </h2>
+          <p class="muted dealer-body" data-reveal style="--reveal-delay:2">
+            BS-VI, TREM IV and CPCB IV+ have put DEF into every new diesel purchase. APEX dealers
+            get a manufacturer's pricing, fresh stock and real support.
+          </p>
+          <a class="btn btn--primary-dark" href="/dealers" data-reveal style="--reveal-delay:3">
+            Apply for Dealership
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= #contact-strip — pre-footer ================= -->
+  <section id="contact-strip" class="section--light hairline-top-light contact-strip cv-auto" aria-labelledby="contact-h">
+    <div class="container">
+      <h2 class="display-2 contact-h" id="contact-h" data-reveal>Talk to a person, not a portal.</h2>
+      <div class="contact-grid">
+        <div class="contact-col" data-reveal>
+          <span class="contact-ic" set:html={phoneIcon} />
+          <div class="contact-body">
+            {site.phones.map((p) => (
+              <span class="phone-row">
+                <a class="tnum phone-link" href={`tel:${p.tel}`}>{p.display}</a>
+                <button class="copy-btn" type="button" data-copy={p.display} aria-label={`Copy ${p.display}`}>
+                  <span set:html={copyIcon} />
+                </button>
+              </span>
+            ))}
+            <p class="small muted">(call or WhatsApp)</p>
+          </div>
+        </div>
+        <div class="contact-col" data-reveal style="--reveal-delay:1">
+          <span class="contact-ic" set:html={mapPinIcon} />
+          <div class="contact-body">
+            <p>{site.address.short}</p>
+            <p class="small muted tnum">GSTIN: {site.gstin}</p>
+            <a class="btn btn--link" href={mapsHref} target="_blank" rel="noopener">Get Directions</a>
+          </div>
+        </div>
+        <div class="contact-col contact-col--cta" data-reveal style="--reveal-delay:2">
+          <a class="btn btn--primary-light" href="/contact#form">Send Enquiry</a>
+          <a class="btn btn--whatsapp" href={waLink()} target="_blank" rel="noopener">
+            <span class="btn-ic" set:html={whatsappIcon} /> WhatsApp Us
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<script>
+  // #products rail — progressive enhancement: dots nav + active sync.
+  // Without JS the rail is a plain scroll-snap carousel (complete on its own).
+  const rail = document.querySelector('[data-rail]');
+  const dotsWrap = document.querySelector('[data-rail-dots]');
+  if (rail && dotsWrap && 'IntersectionObserver' in window) {
+    const cards = Array.from(rail.querySelectorAll('.rail-card'));
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    dotsWrap.hidden = false;
+    const dots = cards.map((card, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'rail-dot';
+      b.setAttribute('aria-label', `Go to pack ${i + 1} of ${cards.length}`);
+      b.addEventListener('click', () => {
+        card.scrollIntoView({
+          behavior: reduce ? 'auto' : 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        });
+      });
+      dotsWrap.append(b);
+      return b;
+    });
+    const setActive = (i) =>
+      dots.forEach((d, j) => d.setAttribute('aria-current', j === i ? 'true' : 'false'));
+    setActive(0);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(cards.indexOf(entry.target));
+        }
+      },
+      { root: rail, threshold: 0.6 }
+    );
+    cards.forEach((c) => io.observe(c));
+  }
+</script>
+
+<style>
+  .btn-ic,
+  .chip-ic {
+    display: inline-flex;
+  }
+  .btn-ic :global(svg),
+  .chip-ic :global(svg) {
+    display: block;
+  }
+  /* Link-buttons on dark chapters read def-400 (global anchor default is blue-600) */
+  #applications .btn--link,
+  #how-it-works .btn--link,
+  #quality .btn--link {
+    color: var(--def-400);
+  }
+
+  /* ---------- #hero ---------- */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding-block: calc(var(--header-h-mobile) + var(--sp-7)) var(--sp-9);
+    overflow: clip;
+  }
+  @media (min-width: 1024px) {
+    .hero {
+      padding-block: calc(var(--header-h) + var(--sp-6)) var(--sp-8);
+    }
+  }
+  .hero-hex {
+    position: absolute;
+    top: 6%;
+    right: 3%;
+    width: min(300px, 40vw);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .hero-hex :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  .hero-grid {
+    display: grid;
+    gap: var(--sp-7);
+    align-items: center;
+    width: 100%;
+  }
+  @media (min-width: 1024px) {
+    .hero-grid {
+      grid-template-columns: 5fr 6fr;
+      gap: var(--sp-8);
+    }
+  }
+  .hero-copy {
+    display: grid;
+    gap: var(--sp-5);
+    justify-items: start;
+  }
+  .hero-sub {
+    max-width: 56ch;
+  }
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+  @media (max-width: 479px) {
+    .hero-ctas {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+  .cert-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .cert-note {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8125rem;
+    max-width: 46ch;
+  }
+  .hero-visual {
+    position: relative;
+    height: clamp(300px, 55vw, 440px);
+  }
+  @media (min-width: 1024px) {
+    .hero-visual {
+      height: min(60svh, 620px);
+    }
+  }
+  .hero-visual::before {
+    content: '';
+    position: absolute;
+    inset: -12%;
+    background: radial-gradient(closest-side, rgba(10, 27, 61, 0.9), transparent 72%);
+    pointer-events: none;
+  }
+  .scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: var(--sp-5);
+    transform: translateX(-50%);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 48px;
+    min-width: 48px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+  }
+  .scroll-cue:hover {
+    color: #fff;
+  }
+  .cue-fill {
+    transform: translateY(100%);
+  }
+  html[data-tier='full'] .cue-fill,
+  html[data-tier='lite'] .cue-fill {
+    animation: cue-rise 2.4s var(--ease-inout) infinite;
+  }
+  @keyframes cue-rise {
+    0% {
+      transform: translateY(100%);
+    }
+    55%,
+    80% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cue-fill {
+      animation: none !important;
+      transform: translateY(35%);
+    }
+  }
+  .hero-seam {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* ---------- #intro ---------- */
+  .intro-wrap {
+    display: grid;
+    justify-items: center;
+  }
+  .intro-wrap :global(.section-header) {
+    margin-bottom: var(--sp-6);
+  }
+  .intro-body {
+    max-width: 62rem;
+    text-align: left;
+  }
+  @media (min-width: 768px) {
+    .intro-body {
+      columns: 2;
+      column-gap: var(--sp-7);
+    }
+  }
+  .intro-foot {
+    margin-top: var(--sp-6);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-5);
+  }
+
+  /* ---------- #stats ---------- */
+  .stats-band {
+    position: relative;
+    background: var(--ink-950);
+    color: #fff;
+    padding-block: clamp(3rem, 6vw, 5rem);
+    overflow: clip;
+  }
+  .stats-line {
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .stats-line :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    position: relative;
+  }
+  .stat-cell {
+    padding: var(--sp-5);
+    display: grid;
+    gap: var(--sp-3);
+    align-content: start;
+  }
+  .stat-cell:nth-child(odd) {
+    border-right: 1px solid var(--hairline-dark);
+  }
+  .stat-cell:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--hairline-dark);
+  }
+  @media (min-width: 1024px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stat-cell {
+      padding: var(--sp-5) var(--sp-6);
+      border-bottom: none !important;
+      border-right: 1px solid var(--hairline-dark);
+    }
+    .stat-cell:last-child {
+      border-right: none;
+    }
+  }
+  .stat-num {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--fs-stat);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+  .stat-unit {
+    font-size: 0.5em;
+    font-weight: 600;
+    color: var(--def-400);
+  }
+  .stat-label {
+    color: rgba(255, 255, 255, 0.64);
+    max-width: 30ch;
+  }
+
+  /* ---------- #products ---------- */
+  .products-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-4) var(--sp-6);
+    margin-bottom: var(--sp-6);
+  }
+  .products-head :global(.section-header) {
+    margin-bottom: 0;
+  }
+  .rail-wrap {
+    position: relative;
+  }
+  .rail {
+    display: flex;
+    gap: var(--sp-5);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-block: var(--sp-2) var(--sp-4);
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+  .rail-card {
+    position: relative;
+    flex: 0 0 min(78vw, 300px);
+    scroll-snap-align: center;
+    padding: var(--sp-5);
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: var(--sp-3);
+  }
+  .rail-media {
+    aspect-ratio: 4 / 5;
+    border-radius: var(--r-md);
+    background: linear-gradient(180deg, #eef3f8, #e4edf5);
+    display: grid;
+    place-items: center;
+  }
+  .rail-card-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .rail-card-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-lg);
+  }
+  .rail-line {
+    max-width: 34ch;
+  }
+  .rail-call {
+    position: relative;
+    z-index: 1;
+    justify-self: start;
+    padding: 10px 20px;
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+  .rail-fade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: clamp(24px, 5vw, 72px);
+    pointer-events: none;
+  }
+  .rail-fade--left {
+    left: 0;
+    background: linear-gradient(90deg, var(--porcelain-50), rgba(246, 249, 252, 0));
+  }
+  .rail-fade--right {
+    right: 0;
+    background: linear-gradient(270deg, var(--porcelain-50), rgba(246, 249, 252, 0));
+  }
+  .rail-dots {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin-top: var(--sp-2);
+  }
+  .rail-dots :global(.rail-dot) {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--r-pill);
+  }
+  .rail-dots :global(.rail-dot)::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(10, 27, 61, 0.2);
+    transition: background var(--t-fast), width var(--t-base) var(--ease-out-soft);
+  }
+  .rail-dots :global(.rail-dot[aria-current='true'])::before {
+    width: 22px;
+    background: var(--blue-600);
+  }
+
+  /* ---------- #applications ---------- */
+  .apps-grid {
+    display: grid;
+    gap: var(--sp-5);
+  }
+  @media (min-width: 1024px) {
+    .apps-grid {
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .app-card.is-wide {
+      grid-column: span 7;
+    }
+    .app-card:not(.is-wide) {
+      grid-column: span 5;
+    }
+  }
+  .app-card {
+    position: relative;
+    display: block;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    border: 1px solid var(--hairline-dark);
+    color: #fff;
+    text-decoration: none;
+    aspect-ratio: 16 / 10;
+    min-height: 240px;
+  }
+  @media (min-width: 1024px) {
+    .app-card {
+      aspect-ratio: auto;
+      min-height: 320px;
+    }
+  }
+  .app-art {
+    position: absolute;
+    inset: 0;
+    transition: transform var(--t-slow) var(--ease-out);
+  }
+  @media (hover: hover) {
+    .app-card:hover .app-art {
+      transform: scale(1.04);
+    }
+    .app-card:hover .app-arrow {
+      background: var(--def-tint);
+      color: var(--def-400);
+    }
+  }
+  .app-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(6, 11, 20, 0.12) 30%, rgba(6, 11, 20, 0.88) 100%);
+  }
+  .app-arrow {
+    position: absolute;
+    top: var(--sp-4);
+    right: var(--sp-4);
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--hairline-dark);
+    color: rgba(255, 255, 255, 0.85);
+    transition: background var(--t-fast), color var(--t-fast);
+  }
+  .app-content {
+    position: relative;
+    height: 100%;
+    display: grid;
+    gap: var(--sp-2);
+    align-content: end;
+    justify-items: start;
+    padding: var(--sp-5);
+  }
+  .app-line {
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 44ch;
+  }
+  .apps-cta {
+    margin-top: var(--sp-7);
+    text-align: center;
+  }
+
+  /* ---------- #how-it-works ---------- */
+  #how-it-works {
+    position: relative;
+    overflow: clip;
+  }
+  .hiw-hex {
+    position: absolute;
+    right: 4%;
+    bottom: 8%;
+    width: min(320px, 42vw);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .hiw-hex :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  .hiw-grid {
+    display: grid;
+    gap: var(--sp-7);
+    align-items: center;
+    position: relative;
+  }
+  @media (min-width: 1024px) {
+    .hiw-grid {
+      grid-template-columns: 6fr 5fr;
+      gap: var(--sp-8);
+    }
+  }
+  .hiw-copy {
+    display: grid;
+    gap: var(--sp-4);
+    justify-items: start;
+  }
+  .hiw-copy .muted {
+    max-width: 58ch;
+  }
+  .hiw-panel {
+    border: 1px solid var(--hairline-dark);
+    border-radius: var(--r-lg);
+    background: rgba(10, 27, 61, 0.45);
+    padding: var(--sp-6) var(--sp-5) var(--sp-5);
+  }
+  @media (max-width: 1023px) {
+    .hiw-panel {
+      order: -1;
+    }
+  }
+  .hiw-caption {
+    margin-top: var(--sp-4);
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+  }
+
+  /* ---------- #why-apex ---------- */
+  .usp-grid {
+    display: grid;
+    gap: var(--sp-5);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  @media (min-width: 480px) {
+    .usp-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .usp-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .usp-card {
+    padding: var(--sp-6) var(--sp-5);
+    display: grid;
+    gap: var(--sp-3);
+    align-content: start;
+  }
+  .usp-icon {
+    display: inline-flex;
+  }
+
+  /* ---------- #quality ---------- */
+  #quality {
+    position: relative;
+    overflow: clip;
+  }
+  .quality-hex {
+    position: absolute;
+    right: -2%;
+    top: 12%;
+    width: min(360px, 46vw);
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .quality-hex :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  .quality-grid {
+    display: grid;
+    gap: var(--sp-7);
+    align-items: center;
+    position: relative;
+  }
+  @media (min-width: 1024px) {
+    .quality-grid {
+      grid-template-columns: 6fr 5fr;
+      gap: var(--sp-8);
+    }
+  }
+  .quality-copy {
+    display: grid;
+    gap: var(--sp-4);
+    justify-items: start;
+  }
+  .quality-copy .muted {
+    max-width: 58ch;
+  }
+  .spec-peek {
+    border: 1px solid var(--hairline-dark);
+    border-radius: var(--r-lg);
+    background: rgba(10, 27, 61, 0.5);
+    padding: var(--sp-4) var(--sp-6) var(--sp-5);
+  }
+  .peek-rows {
+    margin: 0;
+  }
+  .peek-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding-block: 14px;
+    border-bottom: 1px solid var(--hairline-dark);
+    font-size: 0.9375rem;
+  }
+  .peek-row dt,
+  .peek-param {
+    color: rgba(255, 255, 255, 0.72);
+  }
+  .peek-row dd,
+  .peek-value {
+    margin: 0;
+    color: #fff;
+    font-weight: 600;
+    text-align: right;
+  }
+  .peek-more summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  .peek-more summary::-webkit-details-marker {
+    display: none;
+  }
+  .peek-row--hidden {
+    opacity: 0.32;
+    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.25));
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.25));
+    transition: opacity var(--t-base) var(--ease-out-soft);
+  }
+  .spec-peek:hover .peek-row--hidden,
+  .spec-peek:focus-within .peek-row--hidden,
+  .peek-more[open] .peek-row--hidden {
+    opacity: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .peek-more[open] .peek-row--hidden {
+    border-bottom: 1px solid var(--hairline-dark);
+  }
+  .peek-caption {
+    padding-block: var(--sp-3);
+    margin: 0;
+    color: var(--def-400);
+  }
+
+  /* ---------- #marquee ---------- */
+  .marquee-band {
+    background: var(--ink-950);
+    color: #fff;
+    border-block: 1px solid var(--hairline-dark);
+    padding-block: var(--sp-5);
+    overflow: hidden;
+  }
+  .marquee-inner {
+    display: flex;
+    width: max-content;
+  }
+  .marquee-track {
+    display: flex;
+    align-items: center;
+    flex: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .marquee-track li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-6);
+    padding-right: var(--sp-6);
+  }
+  .marquee-sep {
+    display: inline-flex;
+  }
+  .marquee-chip {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--fs-h4);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--def-400);
+    background: var(--def-tint);
+    border-radius: var(--r-pill);
+    padding: 8px 22px;
+  }
+  html[data-tier='full'] .marquee-track,
+  html[data-tier='lite'] .marquee-track {
+    animation: marquee-drift 42s linear infinite;
+    animation-duration: calc(42s * var(--marquee-rate, 1));
+  }
+  @media (hover: hover) {
+    [data-marquee]:hover .marquee-track {
+      animation-play-state: paused;
+    }
+  }
+  @keyframes marquee-drift {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  /* Static/reduced-motion tier: no loop — chips wrap into a static row (§3.4) */
+  html[data-tier='static'] .marquee-inner {
+    width: auto;
+  }
+  html[data-tier='static'] .marquee-track {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: var(--sp-3);
+    width: 100%;
+  }
+  html[data-tier='static'] .marquee-track[aria-hidden='true'] {
+    display: none;
+  }
+  html[data-tier='static'] .marquee-sep {
+    display: none;
+  }
+  html[data-tier='static'] .marquee-track li {
+    padding-right: 0;
+  }
+
+  /* ---------- #faq ---------- */
+  .faq-h {
+    margin-bottom: var(--sp-6);
+  }
+  .faq-cta {
+    margin-top: var(--sp-6);
+  }
+
+  /* ---------- #dealer-cta ---------- */
+  .dealer-frame {
+    border-radius: calc(var(--r-xl) + 1px);
+    padding: 1px;
+    background: var(--grad-liquid);
+    box-shadow: 0 0 80px rgba(47, 182, 233, 0.16);
+  }
+  .dealer-panel {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-xl);
+    background: var(--navy-800);
+    padding: clamp(2.5rem, 6vw, 5rem);
+    display: grid;
+    gap: var(--sp-5);
+    justify-items: start;
+  }
+  .dealer-line {
+    position: absolute;
+    inset: 0;
+    opacity: 0.1;
+    pointer-events: none;
+  }
+  .dealer-line :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .dealer-panel .display-2 {
+    max-width: 22ch;
+    position: relative;
+  }
+  .dealer-body {
+    max-width: 58ch;
+    position: relative;
+  }
+  @media (max-width: 767px) {
+    .dealer-panel {
+      justify-items: center;
+      text-align: center;
+    }
+  }
+
+  /* ---------- #contact-strip ---------- */
+  .contact-strip {
+    padding-block: var(--section-pad-strip);
+  }
+  .contact-h {
+    margin-bottom: var(--sp-7);
+  }
+  .contact-grid {
+    display: grid;
+    gap: var(--sp-6);
+  }
+  @media (min-width: 768px) {
+    .contact-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-7);
+    }
+  }
+  .contact-col {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-4);
+  }
+  .contact-ic {
+    color: var(--blue-600);
+    display: inline-flex;
+    margin-top: 12px;
+  }
+  .contact-body {
+    display: grid;
+    gap: var(--sp-1);
+    justify-items: start;
+  }
+  .phone-row {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+  .phone-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+    font-size: 1.1875rem;
+    color: var(--blue-600);
+    text-decoration: none;
+  }
+  .phone-link:hover {
+    text-decoration: underline;
+  }
+  .copy-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--r-pill);
+    color: var(--slate-500);
+  }
+  .copy-btn:hover {
+    background: rgba(10, 27, 61, 0.06);
+    color: var(--blue-600);
+  }
+  .copy-btn.is-copied::after {
+    content: 'Copied';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink-900);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: var(--r-pill);
+    white-space: nowrap;
+  }
+  .contact-col--cta {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  @media (min-width: 768px) {
+    .contact-col--cta {
+      justify-content: flex-end;
+      align-content: start;
+    }
+  }
+</style>
