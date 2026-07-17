@@ -107,6 +107,13 @@ h4, .h4 { font-size: var(--fs-h4); line-height: 1.25; letter-spacing: -0.01em; f
   background-clip: text;
   color: transparent;
 }
+/* On dark sections the liquid gradient starts too close to the background —
+   use a brighter sweep so the first word never sinks into the navy. */
+.section--dark .grad-text {
+  background: linear-gradient(105deg, #3a6fc4 0%, #2fb6e9 55%, #8fdcf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
 
 /* ---------- Sections & containers ---------- */
 .container { width: 100%; max-width: var(--container-text); margin-inline: auto; padding-inline: 20px; }

@@ -77,6 +77,20 @@ if (tier !== 'static' && 'IntersectionObserver' in window) {
     { threshold: 0.18, rootMargin: '0px 0px -8% 0px' }
   );
   document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+  // Failsafe: content must never stay hidden if the observer misses (anchor jumps,
+  // odd engines). In-view stragglers reveal at 1.2s; everything reveals by 3s.
+  setTimeout(() => {
+    document.querySelectorAll('[data-reveal]:not(.is-revealed)').forEach((el) => {
+      if (el.getBoundingClientRect().top < innerHeight * 1.1) el.classList.add('is-revealed');
+    });
+  }, 1200);
+  setTimeout(() => {
+    document.querySelectorAll('[data-reveal]:not(.is-revealed)').forEach((el) =>
+      el.classList.add('is-revealed')
+    );
+  }, 3000);
+} else if (tier !== 'static') {
+  document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-revealed'));
 }
 
 /* ---------- Counters (#stats etc.) ---------- */
