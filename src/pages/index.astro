@@ -291,7 +291,7 @@ const schema = graph(organization(), webSite());
     <div class="rail-wrap">
       <div class="rail container" data-rail role="list">
         {skus.map((sku, i) => (
-          <article class="card-light rail-card" role="listitem" data-reveal style={`--reveal-delay:${Math.min(i, 4)}`}>
+          <div class="card-light rail-card" role="listitem" data-reveal style={`--reveal-delay:${Math.min(i, 4)}`}>
             <div class="rail-media" style={`view-transition-name: sku-${sku.id}`}>
               <PackVisual sku={sku.id} size="68%" />
             </div>
@@ -302,7 +302,7 @@ const schema = graph(organization(), webSite());
             <a class="btn btn--secondary-light rail-call" href={`tel:${primaryPhone.tel}`}>
               <span class="btn-ic" set:html={phoneIcon} /> Call for Price
             </a>
-          </article>
+          </div>
         ))}
       </div>
       <div class="rail-fade rail-fade--left" aria-hidden="true"></div>

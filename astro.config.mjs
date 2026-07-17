@@ -7,6 +7,8 @@ export default defineConfig({
   trailingSlash: 'never',
   compressHTML: true,
   build: {
-    inlineStylesheets: 'auto',
+    // Inline all CSS: kills 3 render-blocking requests per page (Lighthouse ~450ms);
+    // page HTML stays well under budget and the site is fully static anyway.
+    inlineStylesheets: 'always',
   },
 });

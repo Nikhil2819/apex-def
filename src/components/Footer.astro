@@ -87,7 +87,10 @@ const companyLinks = nav.filter((n) => n.href !== '/');
       is an independent Indian brand and is not affiliated with, licensed by, or endorsed by VDA.
     </p>
   </div>
-  <div class="footer-watermark" aria-hidden="true">APEX</div>
+  <svg class="footer-watermark" aria-hidden="true" viewBox="0 0 600 160" focusable="false">
+    <text x="300" y="150" text-anchor="middle" fill="rgba(255,255,255,0.05)"
+      style="font-family: var(--font-display); font-weight: 600; font-size: 200px;">APEX</text>
+  </svg>
 </footer>
 
 <style>
@@ -113,13 +116,13 @@ const companyLinks = nav.filter((n) => n.href !== '/');
   .footer-col { display: grid; gap: var(--sp-4); align-content: start; }
   .footer-col .overline { color: var(--def-400); }
   .footer-col ul { list-style: none; padding: 0; display: grid; gap: 10px; }
-  .footer-col a, .footer-contact a:not(.btn) {
+  .footer-col a:not(.btn), .footer-contact a:not(.btn) {
     color: rgba(255, 255, 255, 0.82);
     text-decoration: none;
     padding-block: 2px;
     display: inline-block;
   }
-  .footer-col a:hover, .footer-contact a:not(.btn):hover { color: var(--def-400); }
+  .footer-col a:not(.btn):hover, .footer-contact a:not(.btn):hover { color: var(--def-400); }
   .footer-contact { gap: var(--sp-3); }
   .footer-contact address { font-style: normal; display: grid; }
   .footer-wa { justify-self: start; margin-top: var(--sp-2); }
@@ -140,16 +143,12 @@ const companyLinks = nav.filter((n) => n.href !== '/');
   }
   .footer-watermark {
     position: absolute;
-    bottom: -0.22em;
+    bottom: -2vw;
     left: 50%;
     transform: translateX(-50%);
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: clamp(6rem, 22vw, 20rem);
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.05);
+    width: clamp(320px, 66vw, 1100px);
+    height: auto;
     pointer-events: none;
     user-select: none;
-    white-space: nowrap;
   }
 </style>

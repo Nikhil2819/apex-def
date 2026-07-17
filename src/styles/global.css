@@ -23,13 +23,21 @@
   font-display: swap;
   font-style: normal;
 }
-/* Metric-tuned fallback to kill FOUT CLS (design.md §8.4) */
+/* Metric-tuned fallbacks to kill FOUT CLS (design.md §8.4) */
 @font-face {
   font-family: 'Inter-fallback';
   src: local('Arial');
   size-adjust: 107%;
   ascent-override: 90%;
   descent-override: 22.5%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Clash-fallback';
+  src: local('Helvetica Neue'), local('Arial');
+  size-adjust: 98%;
+  ascent-override: 96%;
+  descent-override: 24%;
   line-gap-override: 0%;
 }
 
@@ -165,7 +173,8 @@ h4, .h4 { font-size: var(--fs-h4); line-height: 1.25; letter-spacing: -0.01em; f
 .btn--secondary-dark:hover { border-color: var(--def-400); background: var(--def-tint); }
 .btn--secondary-light { border-color: var(--blue-600); color: var(--blue-600); }
 .btn--secondary-light:hover { background: rgba(27, 79, 156, 0.08); }
-.btn--whatsapp { background: #25d366; color: #fff; }
+/* Dark text on WhatsApp green: white fails WCAG contrast (1.9:1); ink is ~8:1. */
+.btn--whatsapp { background: #25d366; color: var(--ink-950); }
 .btn--whatsapp:hover { background: #1fbd5a; box-shadow: 0 0 20px rgba(37, 211, 102, 0.35); }
 .btn--link {
   padding: 0; min-height: 0; border-radius: 0; gap: var(--sp-2);
@@ -263,6 +272,24 @@ html[data-tier='full'] [data-reveal], html[data-tier='lite'] [data-reveal] {
 html[data-tier='full'] [data-reveal].is-revealed, html[data-tier='lite'] [data-reveal].is-revealed {
   opacity: 1;
   transform: none;
+}
+/* Page-hero exception: above-the-fold content must not wait for JS — the top
+   section holds the LCP on every page. CSS keyframes start on style application,
+   so it paints immediately, JS or not. */
+html[data-tier='full'] main > :first-child [data-reveal],
+html[data-tier='lite'] main > :first-child [data-reveal],
+html[data-tier='full'] #hero [data-reveal], html[data-tier='lite'] #hero [data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+  animation: hero-rise 0.7s var(--ease-out) both;
+  animation-delay: calc(var(--reveal-delay, 0) * 90ms);
+}
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(24px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #hero [data-reveal] { animation: none !important; }
 }
 html[data-tier='static'] [data-reveal] { animation: fade-in 0.4s var(--ease-out) both; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }

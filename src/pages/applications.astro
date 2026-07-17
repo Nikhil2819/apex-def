@@ -414,9 +414,11 @@ const schema = graph(
     border-color: rgba(255, 255, 255, 0.32);
   }
   .subnav-chip.is-active {
-    background: var(--def-tint);
-    color: var(--def-400);
-    border-color: rgba(47, 182, 233, 0.4);
+    /* Solid fill: def-tint over glass can blend below 4.5:1 on light scene
+       content — opaque def-400 with ink text is ≥8:1 on any backdrop. */
+    background: var(--def-400);
+    color: var(--ink-950);
+    border-color: transparent;
   }
 
   /* ---------- Chapter scene band ---------- */

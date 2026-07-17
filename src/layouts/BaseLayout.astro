@@ -52,8 +52,33 @@ const canonical = new URL(path === '/' ? '/' : path, site.domain).href;
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preload" href="/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/clash-display-500.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <script is:inline set:html={tierScript} />
+    <script is:inline>
+      // Reveal bootstrap: anything near the first viewport becomes visible the
+      // moment parsing finishes (readyState 'interactive') — unlike
+      // DOMContentLoaded, this does NOT wait for deferred module scripts, so
+      // the LCP never waits for the JS bundle on slow networks.
+      (function () {
+        function boot() {
+          if (document.documentElement.dataset.tier === 'static') return;
+          requestAnimationFrame(function () {
+            var vh = innerHeight * 1.2;
+            document.querySelectorAll('[data-reveal]').forEach(function (el) {
+              if (el.getBoundingClientRect().top < vh) el.classList.add('is-revealed');
+            });
+          });
+        }
+        if (document.readyState !== 'loading') return boot();
+        document.addEventListener('readystatechange', function h() {
+          if (document.readyState !== 'loading') {
+            document.removeEventListener('readystatechange', h);
+            boot();
+          }
+        });
+      })();
+    </script>
     {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
     <style>
       @view-transition { navigation: auto; }
@@ -69,8 +94,10 @@ const canonical = new URL(path === '/' ? '/' : path, site.domain).href;
       <slot />
     </main>
     <Footer />
-    <MobileCtaBar />
-    <WhatsAppFloat hidden={path === '/contact'} />
+    <aside aria-label="Quick contact">
+      <MobileCtaBar />
+      <WhatsAppFloat hidden={path === '/contact'} />
+    </aside>
     <script>
       import '../scripts/app.js';
     </script>

@@ -252,7 +252,7 @@ const schema = graph(
 
         <div class="selector-panels">
           {skus.map((s) => (
-            <article class="sku-panel" id={s.id} data-sku-panel={s.id}>
+            <div class="sku-panel" id={s.id} data-sku-panel={s.id}>
               <div class="sku-media">
                 <PackVisual sku={s.id} size="min(52vw, 280px)" />
               </div>
@@ -285,7 +285,7 @@ const schema = graph(
                 </p>
                 <CtaRow theme="light" pack={s.pack} />
               </div>
-            </article>
+            </div>
           ))}
         </div>
       </div>
