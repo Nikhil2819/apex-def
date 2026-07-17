@@ -1,17 +1,732 @@
 ---
+// About /about — content.md §3.2, design.md §4.2. Static-first base; motion-layer
+// contracts shipped as data attributes: [data-liquid-line] (story margin line +
+// process spine), [data-process-walk] / [data-process-step] (#plant walk),
+// [data-checklist] (#quality-lab droplet-check list). Entrances via the global
+// data-reveal IO system.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import DuotoneIcon from '../components/about/DuotoneIcon.astro';
+import ProcessWalk from '../components/about/ProcessWalk.astro';
+import LabScene from '../components/about/LabScene.astro';
+import FacilityScene from '../components/about/FacilityScene.astro';
+import { site } from '../data/site.js';
+import { breadcrumbs, graph } from '../utils/schema.js';
+
+const primaryPhone = site.phones.find((p) => p.primary) ?? site.phones[0];
+
+// JSON-LD — content.md §5: AboutPage + Person (worksFor → Organization @id,
+// declared on Home) + BreadcrumbList, one @graph.
+const orgId = `${site.domain}/#org`;
+const schema = graph(
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
+  ]),
+  {
+    '@type': 'AboutPage',
+    '@id': `${site.domain}/about#page`,
+    url: `${site.domain}/about`,
+    name: 'About APEX D.E.F',
+    inLanguage: 'en-IN',
+    about: { '@id': orgId },
+  },
+  {
+    '@type': 'Person',
+    '@id': `${site.domain}/about#founder`,
+    name: 'Naveen Singh',
+    jobTitle: 'Founder',
+    worksFor: { '@id': orgId },
+  }
+);
+
+// Certification cards — content.md §3.2 #certifications + design.md §4.2
+// (4 hairline cards incl. the BIS interim block; DECISIONS.md #1).
+const hexBadge = (glyph: string, dashed = false) =>
+  `<path d="M24 4l17.3 10v20L24 44 6.7 34V14Z" fill="var(--def-tint)"/>` +
+  `<path d="M24 4l17.3 10v20L24 44 6.7 34V14Z" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"${dashed ? ' stroke-dasharray="4 3"' : ''}/>` +
+  glyph;
+const badgeGlyphs = {
+  check:
+    '<path d="m16.5 24.5 5.2 5.2 10-11" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  droplet:
+    '<path d="M24 15c3.4 4.2 5.4 7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C18.6 22 20.6 19.2 24 15Z" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"/>',
+  clock:
+    '<circle cx="24" cy="24" r="7.5" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/><path d="M24 20.5V24l2.8 1.8" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  doc: '<rect x="17.5" y="15.5" width="13" height="17" rx="2" fill="none" stroke="var(--blue-600)" stroke-width="1.5"/><path d="M21 21h6M21 25h6M21 29h4" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round"/>',
+};
+const certCards = [
+  { label: 'ISO 22241-1', line: 'Conformity', badge: hexBadge(badgeGlyphs.check), interim: false, num: false },
+  { label: 'IS 17042 (Part 1)', line: null, badge: hexBadge(badgeGlyphs.droplet), interim: false, num: false },
+  {
+    label: 'BIS / ISI Mark',
+    line: 'Licence details will be displayed here on grant.',
+    badge: hexBadge(badgeGlyphs.clock, true),
+    interim: true,
+    num: false,
+  },
+  { label: 'GSTIN', line: site.gstin, badge: hexBadge(badgeGlyphs.doc), interim: false, num: true },
+];
 ---
 
 <BaseLayout
   title="About APEX D.E.F | DEF Manufacturer, Bulandshahr UP"
   description="APEX D.E.F is the DEF brand of Apex Environment Solutions, Bulandshahr, UP. Fresh-batch production, every batch lab-tested to IS 17042 / ISO 22241."
+  ogTitle="From Bulandshahr's fields to every SCR engine."
+  ogDescription="The people, plant and lab behind APEX D.E.F — and the promise that the number on the label is the number in the can."
   path="/about"
+  schema={schema}
 >
-  <section class="section--dark" style="padding-top: calc(var(--header-h-mobile) + var(--sp-8)); min-height: 60svh;">
-    <div class="container">
+  <!-- #story — dark page-hero, 2-col narrative, pull-quote, parent-brand leaf chip -->
+  <section id="story" class="section--dark story" aria-labelledby="story-heading">
+    <div class="container story-inner">
+      <svg
+        class="story-line desktop-only"
+        data-liquid-line
+        aria-hidden="true"
+        viewBox="0 0 24 600"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="story-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2FB6E9"></stop>
+            <stop offset="1" stop-color="#1B4F9C" stop-opacity="0.3"></stop>
+          </linearGradient>
+        </defs>
+        <path
+          d="M12 0C18 75 6 150 12 225C18 300 6 375 12 450C18 525 8 560 12 600"
+          fill="none"
+          stroke="url(#story-grad)"
+          stroke-width="2"
+          vector-effect="non-scaling-stroke"></path>
+      </svg>
+
       <p class="overline" data-reveal>Our Story</p>
-      <h1 class="display-2" style="margin-top: var(--sp-4); max-width: 18ch;" data-reveal>From Bulandshahr&rsquo;s fields to every SCR engine.</h1>
+      <h1 class="display-2" id="story-heading" data-reveal style="--reveal-delay: 1">
+        From Bulandshahr&rsquo;s fields to every SCR engine.
+      </h1>
+      <p class="chip chip--leaf story-chip" data-reveal style="--reveal-delay: 2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.6 4.4c-9.3 0-14.9 5.6-14.9 11.7 0 1.2.2 2.3.7 3.3 9.2-.4 14.2-6.7 14.2-15Z"/><path d="M5.4 19.4c3.2-5.4 7.6-9.8 14.2-15"/></svg>
+        A brand of Apex Environment Solutions
+      </p>
+
+      <div class="story-narrative" data-reveal style="--reveal-delay: 3">
+        <p>
+          APEX D.E.F began inside Apex Environment Solutions with a simple observation: when TREM
+          IV arrived in January 2023, lakhs of Indian farmers running tractors above 50 HP suddenly
+          needed a fluid most had never heard of — and much of what reached them was repackaged,
+          degraded or diluted.
+        </p>
+        <p>
+          Founder <strong>Naveen Singh</strong> decided the answer had to be manufactured, not
+          traded. From Plot No. 415 in Bulandshahr&rsquo;s Industrial Area, Apex Environment
+          Solutions built a dedicated DEF line: demineralised water, automotive-grade urea, and a
+          lab that clears every batch against the ISO 22241-1 / IS 17042 specification before it
+          ships.
+        </p>
+        <p>
+          Agriculture came first. The rest of the diesel world followed — BS-VI transporters, CEV
+          IV contractors, CPCB IV+ genset operators. The promise to all of them is the same one we
+          made to the first farmer: the number on the label is the number in the can.
+        </p>
+      </div>
+
+      <div class="story-lower">
+        <blockquote class="story-quote" data-reveal>
+          <p class="h3">The number on the label is the number in the can.</p>
+        </blockquote>
+        <figure class="story-figure" data-reveal style="--reveal-delay: 1">
+          <div class="story-frame">
+            <FacilityScene />
+          </div>
+          <figcaption class="small">
+            Apex Environment Solutions facility, Industrial Area, Bulandshahr
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="story-fade" aria-hidden="true"></div>
+  </section>
+
+  <!-- #mission — light: mission/vision cards + 3 value cards -->
+  <section id="mission" class="section--light cv-auto" aria-labelledby="mission-heading">
+    <div class="container">
+      <h2 class="display-2 mission-heading" id="mission-heading" data-reveal>Why we exist.</h2>
+      <div class="mv-grid">
+        <article class="card-light mv-card" data-reveal>
+          <DuotoneIcon name="target" size={40} />
+          <h3 class="h4">Mission</h3>
+          <p class="muted">
+            To make certified, fresh, honestly-priced Diesel Exhaust Fluid available to every
+            Indian farmer, fleet and factory — as easily as they buy diesel.
+          </p>
+        </article>
+        <article class="card-light mv-card" data-reveal style="--reveal-delay: 1">
+          <DuotoneIcon name="eye" size={40} />
+          <h3 class="h4">Vision</h3>
+          <p class="muted">
+            An India where no SCR engine derates, no catalyst dies of contamination, and cleaner
+            air is a by-product of business as usual.
+          </p>
+        </article>
+      </div>
+      <ul class="values-grid">
+        <li class="card-light value-card" data-reveal style="--reveal-delay: 2">
+          <DuotoneIcon name="droplet-check" size={32} />
+          <h3 class="h4">Purity is non-negotiable</h3>
+          <p class="muted small">
+            ppm-level limits are not marketing. They&rsquo;re the spec, and we test to it, batch
+            after batch.
+          </p>
+        </li>
+        <li class="card-light value-card" data-reveal style="--reveal-delay: 3">
+          <DuotoneIcon name="leaf" tone="leaf" size={32} />
+          <h3 class="h4">Farmer-first, always</h3>
+          <p class="muted small">
+            We explain, we deliver to the village workshop, we answer the phone at harvest time.
+          </p>
+        </li>
+        <li class="card-light value-card" data-reveal style="--reveal-delay: 4">
+          <DuotoneIcon name="chat-check" size={32} />
+          <h3 class="h4">Say only what we can supply</h3>
+          <p class="muted small">
+            No promise on this website that our dispatch team hasn&rsquo;t signed off on.
+          </p>
+        </li>
+      </ul>
     </div>
   </section>
-  <!-- Phase 2 fills the remaining sections per content.md -->
+
+  <!-- #plant — dark: intro + 5-step vertical process walk -->
+  <section id="plant" class="section--dark cv-auto" aria-labelledby="plant-heading">
+    <div class="container">
+      <div class="plant-head">
+        <SectionHeader
+          overline="The Facility"
+          heading="A DEF plant is a water plant first."
+          id="plant-heading"
+        />
+        <p class="plant-address small muted tnum" data-reveal style="--reveal-delay: 2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          {site.address.short}
+        </p>
+      </div>
+      <p class="plant-body" data-reveal style="--reveal-delay: 3">
+        Good DEF is 67.5% water — so the process starts there. Raw water is demineralised until
+        conductivity, not appearance, says it&rsquo;s ready. Automotive-grade urea (low biuret, low
+        aldehyde) is dissolved in controlled batches, filtered to hold insolubles under 20 mg/kg,
+        and circulated until concentration sits inside the 31.8–33.2% window. Only stainless steel
+        and HDPE ever touch the fluid — the same materials rule we ask our customers to follow.
+        Filling, capping and batch-coding run in one line, and every pack leaves with its
+        manufacture and expiry date printed.
+      </p>
+      <ProcessWalk />
+    </div>
+  </section>
+
+  <!-- #quality-lab — light split: droplet-check checklist + authored lab scene -->
+  <section id="quality-lab" class="section--light cv-auto" aria-labelledby="lab-heading">
+    <div class="container lab-grid">
+      <div class="lab-copy">
+        <SectionHeader
+          overline="Quality Control"
+          heading="No batch ships until the lab says so."
+          id="lab-heading"
+        />
+        <ul class="checklist" data-checklist>
+          <li class="check-item" data-reveal style="--reveal-delay: 0">
+            <svg class="check-drop" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+              <path class="drop" d="M12 2.6c3.7 4.5 5.9 7.6 5.9 10.4a5.9 5.9 0 1 1-11.8 0C6.1 10.2 8.3 7.1 12 2.6Z" fill="var(--def-tint)" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"></path>
+              <path class="tick" d="m9.2 13.1 2 2 3.8-4.2" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <p>
+              Every batch is sampled and cleared by refractometer and density QC against ISO
+              22241-1 / IS 17042 (Part 1): refractive index (1.3814–1.3843 at 20&nbsp;°C) and
+              density (1.0870–1.0930 g/cm³) confirm concentration on 100% of batches.
+            </p>
+          </li>
+          <li class="check-item" data-reveal style="--reveal-delay: 1">
+            <svg class="check-drop" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+              <path class="drop" d="M12 2.6c3.7 4.5 5.9 7.6 5.9 10.4a5.9 5.9 0 1 1-11.8 0C6.1 10.2 8.3 7.1 12 2.6Z" fill="var(--def-tint)" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"></path>
+              <path class="tick" d="m9.2 13.1 2 2 3.8-4.2" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <p>
+              Full-specification analysis — alkalinity, biuret, aldehydes, insolubles and the trace
+              metals held to 0.2–0.5 mg/kg limits, because at ppm level copper and zinc are
+              catalyst poisons — runs on a defined cadence.
+            </p>
+          </li>
+          <li class="check-item" data-reveal style="--reveal-delay: 2">
+            <svg class="check-drop" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+              <path class="drop" d="M12 2.6c3.7 4.5 5.9 7.6 5.9 10.4a5.9 5.9 0 1 1-11.8 0C6.1 10.2 8.3 7.1 12 2.6Z" fill="var(--def-tint)" stroke="var(--blue-600)" stroke-width="1.5" stroke-linejoin="round"></path>
+              <path class="tick" d="m9.2 13.1 2 2 3.8-4.2" fill="none" stroke="var(--blue-600)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <p>
+              A Certificate of Analysis is available for every batch on request; bulk deliveries
+              carry one by default.
+            </p>
+          </li>
+        </ul>
+        <p class="chip lab-chip tnum" data-reveal style="--reveal-delay: 3">
+          Refractometer + density check on 100% of batches
+        </p>
+      </div>
+      <figure class="lab-figure" data-reveal style="--reveal-delay: 1">
+        <div class="lab-card">
+          <LabScene />
+        </div>
+        <figcaption class="small muted">
+          Digital refractometer verification against the 1.3814–1.3843 window
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- #certifications — light: 4 hairline cert cards incl. BIS interim block -->
+  <section
+    id="certifications"
+    class="section--light hairline-top-light cv-auto"
+    aria-labelledby="cert-heading"
+  >
+    <div class="container cert-wrap">
+      <h2 class="display-2" id="cert-heading" data-reveal>Certified, not just claimed.</h2>
+      <p class="muted cert-body" data-reveal style="--reveal-delay: 1">
+        APEX D.E.F is manufactured to ISO 22241-1 and IS 17042 (Part 1) — the Indian standard made
+        mandatory for all DEF manufactured or imported in India under the Quality Control Order
+        S.O. 922(E), in force since August 2024. Products must carry the ISI Standard Mark under a
+        BIS licence. BIS certification under IS 17042 (Part 1): licence details will be displayed
+        here on grant.
+      </p>
+      <ul class="cert-grid">
+        {
+          certCards.map((card, i) => (
+            <li
+              class:list={['cert-card', { 'cert-card--interim': card.interim }]}
+              data-reveal
+              style={`--reveal-delay: ${i + 2}`}
+            >
+              <svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" set:html={card.badge} />
+              <h3 class="cert-label">{card.label}</h3>
+              {card.line && <p class:list={['small', 'muted', { tnum: card.num }]}>{card.line}</p>}
+            </li>
+          ))
+        }
+      </ul>
+      <p class="small muted" data-reveal style="--reveal-delay: 6">
+        Certificates of Analysis are batch-specific and supplied with deliveries or on request.
+      </p>
+    </div>
+  </section>
+
+  <!-- #leadership — text-only editorial block (no portrait, DECISIONS.md #19) -->
+  <section
+    id="leadership"
+    class="section--light hairline-top-light cv-auto"
+    aria-labelledby="leadership-heading"
+  >
+    <div class="container container--narrow">
+      <div class="leader-frame">
+        <p class="overline" data-reveal>Leadership</p>
+        <h2 class="display-2" id="leadership-heading" data-reveal style="--reveal-delay: 1">
+          Naveen Singh, Founder.
+        </h2>
+        <p class="muted leader-bio" data-reveal style="--reveal-delay: 2">
+          Naveen Singh founded Apex Environment Solutions to build environmental products that
+          Indian operators actually trust — starting with the fluid their engines can&rsquo;t
+          legally run without. He leads production, quality and the dealer network from
+          Bulandshahr.
+        </p>
+        <figure class="leader-quote" data-reveal style="--reveal-delay: 3">
+          <svg class="quote-drop" viewBox="0 0 24 24" width="64" height="64" aria-hidden="true">
+            <path d="M12 2.6c3.7 4.5 5.9 7.6 5.9 10.4a5.9 5.9 0 1 1-11.8 0C6.1 10.2 8.3 7.1 12 2.6Z" fill="var(--def-tint)" stroke="var(--blue-600)" stroke-width="1"></path>
+            <path d="M9.6 10.6c-.9.5-1.4 1.2-1.5 2.2h1.5v2.4h-2.8v-1.9c0-1.8.9-3.1 2.8-4Zm4.9 0c-.9.5-1.4 1.2-1.5 2.2h1.5v2.4h-2.8v-1.9c0-1.8.9-3.1 2.8-4Z" fill="var(--blue-600)"></path>
+          </svg>
+          <blockquote class="h3 leader-quote-text">
+            &lsquo;A farmer who buys our can once should never need to check it twice.&rsquo;
+          </blockquote>
+          <figcaption class="muted">— Naveen Singh</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- #cta — dark closing band -->
+  <section id="cta" class="section--dark cta-band cv-auto" aria-labelledby="cta-heading">
+    <div class="container">
+      <div class="cta-panel" data-reveal>
+        <svg class="cta-line" viewBox="0 0 600 40" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="cta-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#2FB6E9" stop-opacity="0"></stop>
+              <stop offset="0.5" stop-color="#2FB6E9"></stop>
+              <stop offset="1" stop-color="#2FB6E9" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <path
+            d="M0 20C50 4 100 36 150 20S250 4 300 20 400 36 450 20 550 4 600 20"
+            fill="none"
+            stroke="url(#cta-grad)"
+            stroke-width="2"
+            vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <h2 class="h3 cta-heading" id="cta-heading">See the fluid behind the words.</h2>
+        <p class="muted">Ask for a batch COA, a sample, or a plant visit.</p>
+        <div class="cta-buttons">
+          <a class="btn btn--primary-dark" href={`tel:${primaryPhone.tel}`}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Call Now
+          </a>
+          <a class="btn btn--secondary-dark" href="/contact#form">Send Enquiry</a>
+        </div>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  section[id] {
+    scroll-margin-top: calc(var(--header-h-mobile) + 12px);
+  }
+
+  /* ---------- #story ---------- */
+  .story {
+    position: relative;
+    overflow: hidden;
+    min-height: 60svh;
+    padding-top: calc(var(--header-h-mobile) + var(--sp-9));
+  }
+  @media (min-width: 1024px) {
+    .story {
+      padding-top: calc(var(--header-h) + var(--sp-9));
+    }
+  }
+  .story-inner {
+    position: relative;
+  }
+  .story-line {
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    width: 20px;
+    height: calc(100% - 16px);
+    pointer-events: none;
+  }
+  .story h1 {
+    margin-top: var(--sp-4);
+    max-width: 18ch;
+  }
+  .story-chip {
+    margin-top: var(--sp-5);
+  }
+  .story-narrative {
+    margin-top: var(--sp-7);
+    max-width: 120ch;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .story-narrative p {
+    max-width: 65ch;
+    margin-bottom: var(--sp-5);
+    break-inside: avoid;
+  }
+  .story-narrative strong {
+    color: #fff;
+  }
+  @media (min-width: 768px) {
+    .story-narrative {
+      columns: 2;
+      column-gap: var(--sp-8);
+    }
+  }
+  .story-lower {
+    display: grid;
+    gap: var(--sp-7);
+    align-items: center;
+    margin-top: var(--sp-7);
+  }
+  @media (min-width: 1024px) {
+    .story-lower {
+      grid-template-columns: 5fr 6fr;
+      gap: var(--sp-8);
+    }
+  }
+  .story-quote {
+    border-left: 2px solid var(--def-400);
+    padding-left: var(--sp-5);
+  }
+  .story-quote .h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    max-width: 22ch;
+  }
+  .story-figure {
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .story-frame {
+    border: 1px solid var(--hairline-dark);
+    border-radius: var(--r-lg);
+    background: rgba(10, 27, 61, 0.35);
+    padding: var(--sp-5);
+  }
+  .story-figure figcaption {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .story-fade {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: clamp(3.5rem, 8vw, 7rem);
+    background: linear-gradient(180deg, rgba(246, 249, 252, 0), var(--porcelain-50));
+    pointer-events: none;
+  }
+
+  /* ---------- #mission ---------- */
+  .mission-heading {
+    margin-bottom: var(--sp-7);
+  }
+  .mv-grid {
+    display: grid;
+    gap: var(--sp-5);
+  }
+  @media (min-width: 768px) {
+    .mv-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .mv-card,
+  .value-card {
+    padding: var(--sp-6);
+    display: grid;
+    gap: var(--sp-3);
+    align-content: start;
+  }
+  .mv-card p,
+  .value-card p {
+    max-width: 48ch;
+  }
+  .values-grid {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-5) 0 0;
+    display: grid;
+    gap: var(--sp-5);
+  }
+  @media (min-width: 768px) {
+    .values-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* ---------- #plant ---------- */
+  .plant-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    column-gap: var(--sp-6);
+  }
+  .plant-address {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-7);
+  }
+  .plant-body {
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 65ch;
+    margin-bottom: var(--sp-8);
+  }
+
+  /* ---------- #quality-lab ---------- */
+  .lab-grid {
+    display: grid;
+    gap: var(--sp-7);
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .lab-grid {
+      grid-template-columns: 6fr 5fr;
+      gap: var(--sp-8);
+    }
+  }
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+  }
+  .check-item {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: var(--sp-4);
+    padding-block: var(--sp-4);
+    align-items: start;
+  }
+  .check-item + .check-item {
+    border-top: 1px solid var(--hairline-light);
+  }
+  .check-item p {
+    color: var(--slate-500);
+    max-width: 58ch;
+  }
+  .check-drop {
+    margin-top: 2px;
+  }
+  /* Sequential droplet-check draw: full/lite start undrawn, check on reveal;
+     static tier renders checked (no :not(.is-revealed) override applies). */
+  .check-item .tick {
+    stroke-dasharray: 10;
+    transition: stroke-dashoffset 0.5s var(--ease-out-soft)
+      calc(var(--reveal-delay, 0) * 70ms + 0.3s);
+  }
+  .check-item .drop {
+    transition: fill-opacity 0.4s var(--ease-out-soft) calc(var(--reveal-delay, 0) * 70ms + 0.2s);
+  }
+  :global(html[data-tier='full']) .check-item:not(.is-revealed) .tick,
+  :global(html[data-tier='lite']) .check-item:not(.is-revealed) .tick {
+    stroke-dashoffset: 10;
+  }
+  :global(html[data-tier='full']) .check-item:not(.is-revealed) .drop,
+  :global(html[data-tier='lite']) .check-item:not(.is-revealed) .drop {
+    fill-opacity: 0;
+  }
+  .lab-chip {
+    margin-top: var(--sp-5);
+  }
+  .lab-figure {
+    display: grid;
+    gap: var(--sp-3);
+    margin: 0;
+  }
+  .lab-card {
+    background: #fff;
+    border-radius: var(--r-lg);
+    box-shadow: var(--e-1);
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+  }
+
+  /* ---------- #certifications ---------- */
+  .cert-wrap {
+    text-align: center;
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-5);
+  }
+  .cert-body {
+    max-width: 70ch;
+  }
+  .cert-grid {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-3) 0 0;
+    width: 100%;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  @media (min-width: 480px) {
+    .cert-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .cert-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .cert-card {
+    background: #fff;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-md);
+    padding: var(--sp-6) var(--sp-4);
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-3);
+    align-content: start;
+  }
+  .cert-card--interim {
+    border-style: dashed;
+  }
+  .cert-label {
+    font-size: var(--fs-h4);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    font-weight: 500;
+  }
+  .cert-card p {
+    max-width: 26ch;
+  }
+
+  /* ---------- #leadership ---------- */
+  .leader-frame {
+    background: #fff;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-xl);
+    padding: clamp(2rem, 6vw, 4.5rem);
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .leader-bio {
+    max-width: 58ch;
+  }
+  .leader-quote {
+    margin: var(--sp-5) 0 0;
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .leader-quote-text {
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: var(--ink-900);
+    max-width: 28ch;
+  }
+
+  /* ---------- #cta ---------- */
+  .cta-band {
+    padding-block: var(--section-pad-strip);
+  }
+  .cta-panel {
+    position: relative;
+    overflow: hidden;
+    background: var(--navy-800);
+    border: 1px solid var(--hairline-dark);
+    border-radius: var(--r-xl);
+    padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.5rem, 5vw, 4rem);
+    text-align: center;
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-4);
+  }
+  .cta-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 90px;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  .cta-heading {
+    color: #fff;
+  }
+  /* keep copy/buttons painting above the absolutely-positioned motif line */
+  .cta-panel > :not(.cta-line) {
+    position: relative;
+  }
+  .cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-4);
+    margin-top: var(--sp-2);
+  }
+  @media (max-width: 479px) {
+    .cta-buttons {
+      width: 100%;
+      flex-direction: column;
+    }
+    .cta-buttons .btn {
+      width: 100%;
+    }
+  }
+</style>

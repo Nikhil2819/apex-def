@@ -1,0 +1,94 @@
+---
+// #quality-lab authored vector lab scene (design.md §4.2): digital refractometer
+// + DEF sample over a bench, with the published refractive-index window as a
+// verification scale. 1.5px strokes, brand palette on light. The 1.3814–1.3843
+// figures are the published ISO 22241-1 window (content.md #quality-lab).
+---
+
+<svg
+  class="lab-scene"
+  viewBox="0 0 420 320"
+  role="img"
+  aria-label="Illustration: digital refractometer verifying a DEF sample against the 1.3814–1.3843 refractive-index window"
+>
+  <defs>
+    <linearGradient id="lab-liquid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2FB6E9" stop-opacity="0.4"></stop>
+      <stop offset="1" stop-color="#1B4F9C" stop-opacity="0.35"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- urea hexagon motif, faint -->
+  <g stroke="rgba(27,79,156,0.14)" stroke-width="1.5" fill="none">
+    <path d="M334 34l14 8v16l-14 8-14-8V42Z"></path>
+    <path d="M366 56l10 5.8v11.6l-10 5.8-10-5.8V61.8Z"></path>
+    <circle cx="334" cy="34" r="1.5" fill="rgba(27,79,156,0.2)" stroke="none"></circle>
+  </g>
+
+  <!-- dropper + falling sample drop -->
+  <g fill="none" stroke="#1B4F9C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M188 30h16v12l-4 8v14h-8V50l-4-8Z" fill="#FFFFFF"></path>
+    <path d="M192 30v-6h8v6"></path>
+  </g>
+  <path
+    d="M196 78c2.6 3.2 4 5.4 4 7.2a4 4 0 1 1-8 0c0-1.8 1.4-4 4-7.2Z"
+    fill="#2FB6E9"></path>
+
+  <!-- refractometer body -->
+  <rect x="96" y="118" width="200" height="94" rx="14" fill="#FFFFFF" stroke="#1B4F9C" stroke-width="1.5"></rect>
+  <!-- prism well straddling the top plate -->
+  <circle cx="196" cy="118" r="21" fill="#FFFFFF" stroke="#1B4F9C" stroke-width="1.5"></circle>
+  <circle cx="196" cy="118" r="11.5" fill="url(#lab-liquid)" stroke="#2FB6E9" stroke-width="1.5"></circle>
+  <!-- display -->
+  <rect x="118" y="148" width="86" height="40" rx="6" fill="rgba(47,182,233,0.12)" stroke="rgba(10,27,61,0.2)" stroke-width="1.5"></rect>
+  <text
+    x="161"
+    y="174"
+    text-anchor="middle"
+    font-size="15"
+    fill="#1B4F9C"
+    style="font-family: var(--font-body), sans-serif; font-weight: 600; font-variant-numeric: tabular-nums;"
+    >20 °C</text>
+  <!-- controls -->
+  <circle cx="232" cy="168" r="7" fill="none" stroke="#1B4F9C" stroke-width="1.5"></circle>
+  <circle cx="258" cy="168" r="7" fill="none" stroke="#1B4F9C" stroke-width="1.5"></circle>
+
+  <!-- capped sample vial -->
+  <rect x="326" y="140" width="22" height="9" rx="3" fill="#2FB6E9"></rect>
+  <rect x="322" y="148" width="30" height="64" rx="7" fill="#FFFFFF" stroke="#1B4F9C" stroke-width="1.5"></rect>
+  <path d="M324 174h26v31a7 7 0 0 1-7 7h-12a7 7 0 0 1-7-7Z" fill="url(#lab-liquid)"></path>
+  <path d="M324 174h26" stroke="#2FB6E9" stroke-width="1.5" stroke-linecap="round"></path>
+
+  <!-- bench -->
+  <path d="M60 212h320" stroke="#1B4F9C" stroke-width="1.5" stroke-linecap="round"></path>
+  <path d="M84 212v22M356 212v22" stroke="rgba(10,27,61,0.3)" stroke-width="1.5" stroke-linecap="round"></path>
+
+  <!-- refractive-index window scale: 1.3814–1.3843, reading in-window -->
+  <path d="M96 264h228" stroke="rgba(10,27,61,0.16)" stroke-width="4" stroke-linecap="round"></path>
+  <path d="M150 264h120" stroke="rgba(47,182,233,0.55)" stroke-width="4" stroke-linecap="round"></path>
+  <path d="M150 255v18M270 255v18" stroke="#1B4F9C" stroke-width="1.5" stroke-linecap="round"></path>
+  <path d="M214 260l-6-10h12Z" fill="#2FB6E9"></path>
+  <text
+    x="150"
+    y="292"
+    text-anchor="middle"
+    font-size="12.5"
+    fill="#5B6B7F"
+    style="font-family: var(--font-body), sans-serif; font-weight: 600; font-variant-numeric: tabular-nums;"
+    >1.3814</text>
+  <text
+    x="270"
+    y="292"
+    text-anchor="middle"
+    font-size="12.5"
+    fill="#5B6B7F"
+    style="font-family: var(--font-body), sans-serif; font-weight: 600; font-variant-numeric: tabular-nums;"
+    >1.3843</text>
+</svg>
+
+<style>
+  .lab-scene {
+    width: 100%;
+    height: auto;
+  }
+</style>

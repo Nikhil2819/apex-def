@@ -1,0 +1,54 @@
+---
+// Phosphor-style duotone icons drawn in-house on the 24-grid (design.md §2.5):
+// back layer tint fill + front 1.5px stroke. `tone="leaf"` follows the
+// eco-meaning rule (--leaf-tint back, --leaf-500 stroke, icons-only on light).
+type IconName = 'target' | 'eye' | 'droplet-check' | 'leaf' | 'chat-check';
+
+interface Props {
+  name: IconName;
+  tone?: 'def' | 'leaf';
+  size?: number;
+}
+
+const { name, tone = 'def', size = 36 } = Astro.props;
+const tint = tone === 'leaf' ? 'var(--leaf-tint)' : 'var(--def-tint)';
+const stroke = tone === 'leaf' ? 'var(--leaf-500)' : 'var(--blue-600)';
+
+const back: Record<IconName, string> = {
+  target: `<circle cx="12" cy="12" r="9" fill="${tint}"/>`,
+  eye: `<path d="M2.5 12C5 7.2 8.2 5 12 5s7 2.2 9.5 7C19 16.8 15.8 19 12 19s-7-2.2-9.5-7Z" fill="${tint}"/>`,
+  'droplet-check': `<path d="M12 2.8c3.6 4.4 5.8 7.4 5.8 10.2a5.8 5.8 0 1 1-11.6 0C6.2 10.2 8.4 7.2 12 2.8Z" fill="${tint}"/>`,
+  leaf: `<path d="M19.6 4.4c-9.3 0-14.9 5.6-14.9 11.7 0 1.2.2 2.3.7 3.3 9.2-.4 14.2-6.7 14.2-15Z" fill="${tint}"/>`,
+  'chat-check': `<path d="M12 3.8c-5 0-9 3.3-9 7.4 0 2 .9 3.8 2.5 5.1L4.6 20l3.7-1.4c1.1.4 2.4.6 3.7.6 5 0 9-3.3 9-7.4s-4-7.4-9-7.4Z" fill="${tint}"/>`,
+};
+
+const front: Record<IconName, string> = {
+  target:
+    '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.2"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
+  eye: '<path d="M2.5 12C5 7.2 8.2 5 12 5s7 2.2 9.5 7C19 16.8 15.8 19 12 19s-7-2.2-9.5-7Z"/><circle cx="12" cy="12" r="3"/>',
+  'droplet-check':
+    '<path d="M12 2.8c3.6 4.4 5.8 7.4 5.8 10.2a5.8 5.8 0 1 1-11.6 0C6.2 10.2 8.4 7.2 12 2.8Z"/><path d="m9.3 13.2 1.9 1.9 3.7-4"/>',
+  leaf: '<path d="M19.6 4.4c-9.3 0-14.9 5.6-14.9 11.7 0 1.2.2 2.3.7 3.3 9.2-.4 14.2-6.7 14.2-15Z"/><path d="M5.4 19.4c3.2-5.4 7.6-9.8 14.2-15"/>',
+  'chat-check':
+    '<path d="M12 3.8c-5 0-9 3.3-9 7.4 0 2 .9 3.8 2.5 5.1L4.6 20l3.7-1.4c1.1.4 2.4.6 3.7.6 5 0 9-3.3 9-7.4s-4-7.4-9-7.4Z"/><path d="m8.9 11.5 2 2 4.2-4.5"/>',
+};
+
+const inner =
+  back[name] +
+  `<g fill="none" stroke="${stroke}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:${stroke}">${front[name]}</g>`;
+---
+
+<svg
+  class="duotone-icon"
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  aria-hidden="true"
+  set:html={inner}
+/>
+
+<style>
+  .duotone-icon {
+    flex: 0 0 auto;
+  }
+</style>

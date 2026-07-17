@@ -1,17 +1,526 @@
 ---
+// Dealers page — content.md §3.6 (copy verbatim), design.md §4.6 (layout/motion).
+// Static-first build: everything below is complete and convertible with JS off.
+// Motion-layer contracts for the later signature pass:
+//   - data-reveal + --reveal-delay        → global IO entrance system (app.js)
+//   - data-anim="liquid-line"             → hero liquid-line dash-offset scrub
+//   - data-anim="norms-dots"              → sequential dot lighting (ships lit = static tier)
+//   - data-anim="check-seq"               → sequential droplet-check draw (ships checked)
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Faq from '../components/Faq.astro';
+import DealerForm from '../components/DealerForm.astro';
+import DealerHeroArt from '../components/dealers/DealerHeroArt.astro';
+import { site, waLink } from '../data/site.js';
+import { graph, faqPage, breadcrumbs } from '../utils/schema.js';
+
+const primaryPhone = site.phones.find((p) => p.primary) ?? site.phones[0];
+const dealerWa = waLink(site.whatsapp.dealer);
+
+const statChips = [
+  '~5 L DEF per 100 L diesel',
+  'Tractors >50 HP: DEF since Jan 2023',
+  'Gensets ≤800 kW: DEF since Jul 2023',
+  'Market growing 6–8%/yr (est.)',
+];
+
+// Mini norms strip — static extract of /what-is-def#norms-india (7 locked milestones).
+const normYears = ['2020', '2021', '2023', '2023', '2023', '2024', '2026+'];
+
+// Duotone icon set (Phosphor-style, drawn to the §2.5 rule: back layer def-tint,
+// front 1.5px stroke --blue-600 on light). chart-line-up / package / map-trifold /
+// megaphone / headset / truck per design.md §4.6 #support.
+const TINT = 'rgba(47,182,233,0.12)';
+const STROKE = '#1B4F9C';
+const duo = (back: string, front: string) =>
+  `<svg width="36" height="36" viewBox="0 0 32 32" fill="none" aria-hidden="true">${back}` +
+  `<g stroke="${STROKE}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">${front}</g></svg>`;
+
+const icons: Record<string, string> = {
+  chart: duo(
+    `<path d="M9 21l6-6 4.5 4L27 11v10H9Z" fill="${TINT}"/>`,
+    '<path d="M5 5v21h22"/><path d="M9 21l6-6 4.5 4L27 11"/><path d="M22.5 11H27v4.5"/>'
+  ),
+  package: duo(
+    `<path d="M16 4.5l10 5.25L16 15.25 6 9.75Z" fill="${TINT}"/>`,
+    '<path d="M16 4.5l10 5.25v12.5L16 27.5 6 22.25V9.75Z"/><path d="M6 9.75l10 5.5 10-5.5M16 15.25V27.5"/><path d="M11.2 7l10 5.4"/>'
+  ),
+  map: duo(
+    `<path d="M12.3 4.5L19.7 7v20.5l-7.4-2.5Z" fill="${TINT}"/>`,
+    '<path d="M5 7l7.3-2.5L19.7 7 27 4.5V25l-7.3 2.5-7.4-2.5L5 27.5Z"/><path d="M12.3 4.5V25M19.7 7v20.5"/>'
+  ),
+  megaphone: duo(
+    `<path d="M9.5 12.5L26 5.5v21L9.5 19.5Z" fill="${TINT}"/>`,
+    '<path d="M26 5.5L9.5 12.5H7a3 3 0 0 0-3 3v1a3 3 0 0 0 3 3h2.5L26 26.5Z"/><path d="M11.5 19.5V24a2 2 0 0 0 4 0v-3.4"/>'
+  ),
+  headset: duo(
+    `<rect x="5" y="17" width="6" height="8.5" rx="2.5" fill="${TINT}"/><rect x="21" y="17" width="6" height="8.5" rx="2.5" fill="${TINT}"/>`,
+    '<path d="M5.5 18.5v-3a10.5 10.5 0 0 1 21 0v3"/><rect x="5" y="17" width="6" height="8.5" rx="2.5"/><rect x="21" y="17" width="6" height="8.5" rx="2.5"/><path d="M26.5 25.5c-1.2 1.8-3.2 2.5-5.5 2.5h-2"/>'
+  ),
+  truck: duo(
+    `<rect x="4" y="9" width="15" height="12" rx="1.5" fill="${TINT}"/>`,
+    '<rect x="4" y="9" width="15" height="12" rx="1.5"/><path d="M19 13h4.6L28 17.6V21h-9"/><circle cx="10.5" cy="23.5" r="2.75"/><circle cx="22.5" cy="23.5" r="2.75"/>'
+  ),
+};
+
+// Custom droplet-with-check motif (design.md §2.5 custom icons; check = leaf success).
+const dropletCheck =
+  `<svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">` +
+  `<path d="M16 3.5C16 3.5 25.5 14.2 25.5 20.2a9.5 9.5 0 0 1-19 0C6.5 14.2 16 3.5 16 3.5Z" fill="${TINT}"/>` +
+  `<path d="M16 3.5C16 3.5 25.5 14.2 25.5 20.2a9.5 9.5 0 0 1-19 0C6.5 14.2 16 3.5 16 3.5Z" stroke="${STROKE}" stroke-width="1.5" stroke-linejoin="round"/>` +
+  '<path d="M12 20.4l2.9 2.9 5.3-6.1" stroke="#1F9D55" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+const supportPoints = [
+  { icon: 'chart', title: 'Manufacturer pricing', body: 'You buy at factory terms, not through layers.' },
+  { icon: 'package', title: 'Fresh-batch stock', body: "Stock rotates from live production, not a trader's godown. Long dating on every pack." },
+  { icon: 'map', title: 'Territory clarity', body: "District-wise appointment so your investment isn't undercut next door." },
+  { icon: 'megaphone', title: 'Marketing & education material', body: 'Counter displays, pack literature, and the content on this site — in your hands for customer conversations.' },
+  { icon: 'headset', title: 'Technical backup', body: 'A manufacturer on the phone for spec questions, COAs and complaint resolution.' },
+  { icon: 'truck', title: 'Supply reliability', body: 'Scheduled replenishment; emergency dispatch when your stock runs hot.' },
+];
+
+const requirements = [
+  { title: 'Covered storage', body: 'Shaded, ventilated space for palletised packs; DEF must stay under 30 °C and out of sunlight.' },
+  { title: 'An opening order', body: 'A commercially serious first stock — sized to your market, agreed on a call.' },
+  { title: 'Local reach', body: 'Existing access to fleet operators, tractor owners, workshops, fuel pumps or facility managers in your area.' },
+  { title: 'Basic handling discipline', body: 'Sell sealed packs only; first-in, first-out rotation; no decanting.' },
+  { title: 'GST registration', body: 'For invoicing and compliance.' },
+];
+
+const dealerFaqs = [
+  {
+    q: 'Do I need prior experience with DEF?',
+    a: "No — most of our best conversations start with lubricant, spares and fuel-station businesses. We'll train you on storage, handling and the customer pitch.",
+  },
+  {
+    q: 'What investment is needed to start?',
+    a: "An opening stock order plus covered storage. Exact numbers depend on your territory and volume plan — they're agreed on a call, not published here.",
+  },
+  {
+    q: 'Will I get territory protection?',
+    a: 'Appointments are made district-wise with the intent that dealers build their market without being undercut. Terms are set out in the dealer agreement.',
+  },
+  {
+    q: 'How is stock delivered and how fast?',
+    a: 'From our Bulandshahr plant, on scheduled replenishment; most orders dispatch within 48 hours.',
+  },
+  {
+    q: 'What margins can I expect?',
+    a: "DEF is a volume-and-repeat business; dealer economics are shared during the appointment discussion. We don't publish pricing on this site.",
+  },
+];
+
+const schema = graph(
+  faqPage(dealerFaqs),
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Dealers', path: '/dealers' },
+  ])
+);
 ---
 
 <BaseLayout
   title="DEF Dealership & Distributorship | APEX D.E.F India"
   description="Partner with a DEF manufacturer. BS-VI, TREM IV and CPCB IV+ norms are compounding DEF demand across India. Apply for an APEX D.E.F dealership today."
+  ogTitle="Sell what every new diesel must buy."
+  ogDescription="District-wise dealer appointments from a manufacturer: factory terms, fresh batches, real support. Apply in two minutes."
   path="/dealers"
+  schema={schema}
 >
-  <section class="section--dark" style="padding-top: calc(var(--header-h-mobile) + var(--sp-8)); min-height: 60svh;">
-    <div class="container">
-      <p class="overline" data-reveal>Dealership &amp; Distribution</p>
-      <h1 class="display-2" style="margin-top: var(--sp-4); max-width: 18ch;" data-reveal>Sell what every new diesel must buy.</h1>
+  <!-- #opportunity — dark page-hero -->
+  <section id="opportunity" class="section--dark hero">
+    <div class="hero-line" aria-hidden="true">
+      <svg viewBox="0 0 1440 320" preserveAspectRatio="none" data-anim="liquid-line">
+        <defs>
+          <linearGradient id="dlr-line" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#2FB6E9" stop-opacity="0"></stop>
+            <stop offset="0.5" stop-color="#2FB6E9" stop-opacity="0.55"></stop>
+            <stop offset="1" stop-color="#2FB6E9" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <path d="M0 190C180 120 360 250 620 180S1080 90 1440 170" fill="none" stroke="url(#dlr-line)" stroke-width="2"></path>
+      </svg>
+    </div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="overline" data-reveal>Dealership &amp; Distribution</p>
+        <h1 class="display-2" data-reveal style="--reveal-delay:1">Sell what every new diesel must buy.</h1>
+        <p class="hero-body muted" data-reveal style="--reveal-delay:2">
+          Three regulations built this market and none of them is going away. Since April 2020,
+          every BS-VI truck and bus consumes DEF at roughly 5% of its diesel. Since January 2023,
+          every new tractor above 50 HP joined them. Since July 2023, so did new DG sets up to
+          800 kW. Analysts estimate India's DEF market at roughly USD 400–450 million and growing
+          6–8% a year — and TREM V / CEV V phase-ins from 2026 only widen the funnel. DEF is a
+          repeat-purchase consumable: the customer you win this month buys again next month. APEX
+          dealers buy from the manufacturer — fresh batches, honest dates, and a brand built to be
+          defended in your district.
+        </p>
+        <ul class="stat-chips" role="list">
+          {statChips.map((chip, i) => (
+            <li class="chip tnum" data-reveal style={`--reveal-delay:${3 + i}`}>{chip}</li>
+          ))}
+        </ul>
+        <a class="norms-link" href="/what-is-def#norms-india" data-reveal style="--reveal-delay:7">
+          <span class="norms-dots" data-anim="norms-dots" aria-hidden="true">
+            {normYears.map((year) => (
+              <span class="norm">
+                <span class="norm-dot"></span>
+                <span class="norm-year tnum">{year}</span>
+              </span>
+            ))}
+          </span>
+          <span class="norms-label">The rules that made DEF essential in India →</span>
+        </a>
+        <div class="hero-ctas" data-reveal style="--reveal-delay:8">
+          <a class="btn btn--primary-dark" href="#dealer-form">Apply for Dealership</a>
+          <a class="btn btn--whatsapp" href={dealerWa} target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.3-.7.8-.8 1-.2.2-.3.2-.6.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.1-.7l.5-.6c.1-.2.1-.3.2-.5s0-.4 0-.5c0-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3a3 3 0 0 0-1 2.2c0 1.3 1 2.6 1.1 2.8.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>
+            WhatsApp Us
+          </a>
+        </div>
+      </div>
+      <div class="hero-art" data-reveal style="--reveal-delay:2">
+        <DealerHeroArt />
+      </div>
     </div>
   </section>
-  <!-- Phase 2 fills the remaining sections per content.md -->
+
+  <!-- #support — 6 support cards -->
+  <section id="support" class="section--light cv-auto" aria-labelledby="support-h">
+    <div class="container">
+      <h2 id="support-h" class="display-2 sec-h" data-reveal>What APEX puts behind you.</h2>
+      <ul class="support-grid" role="list">
+        {supportPoints.map((point, i) => (
+          <li class="card-light support-card" data-reveal style={`--reveal-delay:${i % 3}`}>
+            <span class="card-icon" set:html={icons[point.icon]} />
+            <h3 class="h4">{point.title}</h3>
+            <p class="muted">{point.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- #requirements — 5-point numbered checklist -->
+  <section id="requirements" class="section--light hairline-top-light cv-auto" aria-labelledby="requirements-h">
+    <div class="container">
+      <h2 id="requirements-h" class="display-2 sec-h" data-reveal>What we look for.</h2>
+      <ol class="req-grid" role="list" data-anim="check-seq">
+        {requirements.map((req, i) => (
+          <li class="req-card" data-reveal style={`--reveal-delay:${i}`}>
+            <div class="req-head">
+              <span class="overline tnum req-num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="req-check" set:html={dropletCheck} />
+            </div>
+            <h3 class="h4">{req.title}</h3>
+            <p class="small muted">{req.body}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- #dealer-form — navy split: pitch + application form -->
+  <section id="dealer-form" class="section--dark form-sec cv-auto" aria-labelledby="dealer-form-h">
+    <svg class="hex-pattern" viewBox="0 0 360 290" fill="none" aria-hidden="true">
+      <defs><path id="dlr-hex" d="M50 0l43.3 25v50L50 100 6.7 75V25Z"></path></defs>
+      <g stroke="#FFFFFF" stroke-width="1.5">
+        <use href="#dlr-hex" x="60" y="10"></use>
+        <use href="#dlr-hex" x="160" y="66"></use>
+        <use href="#dlr-hex" x="60" y="122"></use>
+        <use href="#dlr-hex" x="160" y="178"></use>
+        <use href="#dlr-hex" x="260" y="122"></use>
+      </g>
+      <g fill="#FFFFFF">
+        <circle cx="110" cy="10" r="2.5"></circle>
+        <circle cx="210" cy="66" r="2.5"></circle>
+        <circle cx="110" cy="122" r="2.5"></circle>
+        <circle cx="310" cy="122" r="2.5"></circle>
+      </g>
+    </svg>
+    <div class="container form-split">
+      <div class="pitch-head">
+        <h2 id="dealer-form-h" class="display-2" data-reveal>Apply for a dealership.</h2>
+        <p class="lead muted" data-reveal style="--reveal-delay:1">Two minutes. We respond within 2 working days.</p>
+      </div>
+      <div class="form-col" data-reveal style="--reveal-delay:2">
+        <DealerForm />
+      </div>
+      <div class="pitch-alt" data-reveal style="--reveal-delay:3">
+        <a class="btn btn--primary-dark tnum" href={`tel:${primaryPhone.tel}`}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Call {primaryPhone.display}
+        </a>
+        <a class="btn btn--whatsapp" href={dealerWa} target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.3-.7.8-.8 1-.2.2-.3.2-.6.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.1-.7l.5-.6c.1-.2.1-.3.2-.5s0-.4 0-.5c0-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3a3 3 0 0 0-1 2.2c0 1.3 1 2.6 1.1 2.8.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>
+          WhatsApp Us
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- #dealer-faq — 5 dealer-specific Q&As -->
+  <section id="dealer-faq" class="section--light cv-auto" aria-labelledby="dealer-faq-h">
+    <div class="container container--narrow">
+      <h2 id="dealer-faq-h" class="visually-hidden">Dealer FAQs</h2>
+      <div data-reveal>
+        <Faq items={dealerFaqs} />
+      </div>
+    </div>
+  </section>
+
+  <!-- Section-end CTA band -->
+  <section class="section--dark cta-band" aria-labelledby="dealer-desk-h">
+    <div class="container cta-band-inner">
+      <h2 id="dealer-desk-h" class="h3" data-reveal>Prefer talking to typing?</h2>
+      <p class="lead muted" data-reveal style="--reveal-delay:1">
+        Call <a class="tnum" href={`tel:${primaryPhone.tel}`}>{primaryPhone.display}</a> and ask for the dealer desk.
+      </p>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  /* ---------- #opportunity ---------- */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding-top: calc(var(--header-h-mobile) + var(--sp-8));
+  }
+  @media (min-width: 1024px) {
+    .hero {
+      padding-top: calc(var(--header-h) + var(--sp-8));
+    }
+  }
+  .hero-line {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 55%;
+    pointer-events: none;
+    opacity: 0.3;
+  }
+  .hero-line svg {
+    width: 100%;
+    height: 100%;
+  }
+  .hero-grid {
+    position: relative;
+    display: grid;
+    gap: var(--sp-8);
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    }
+  }
+  .hero-copy > .display-2 {
+    margin-top: var(--sp-4);
+    max-width: 18ch;
+  }
+  .hero-body {
+    margin-top: var(--sp-5);
+    max-width: 62ch;
+  }
+  .stat-chips {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-6) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+  .norms-link {
+    display: inline-grid;
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+    padding-block: var(--sp-1);
+    text-decoration: none;
+  }
+  .norms-dots {
+    display: flex;
+    align-items: flex-start;
+  }
+  .norm {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+  }
+  .norm + .norm {
+    margin-left: clamp(18px, 4vw, 34px);
+  }
+  .norm + .norm::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 4.5px;
+    width: clamp(18px, 4vw, 34px);
+    height: 1px;
+    background: rgba(47, 182, 233, 0.35);
+  }
+  .norm-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--def-400);
+    box-shadow: 0 0 10px rgba(47, 182, 233, 0.6);
+  }
+  .norm-year {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .norms-label {
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--def-400);
+  }
+  .norms-link:hover .norms-label,
+  .norms-link:focus-visible .norms-label {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+  }
+  .hero-art {
+    background: rgba(10, 27, 61, 0.45);
+    border: 1px solid var(--hairline-dark);
+    border-radius: var(--r-xl);
+    padding: clamp(16px, 3vw, 28px);
+  }
+
+  /* ---------- shared section heading ---------- */
+  .sec-h {
+    margin-bottom: var(--sp-7);
+    max-width: 20ch;
+  }
+
+  /* ---------- #support ---------- */
+  .support-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--sp-5);
+  }
+  @media (min-width: 768px) {
+    .support-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .support-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .support-card {
+    padding: var(--sp-6);
+    display: grid;
+    gap: var(--sp-4);
+    align-content: start;
+  }
+  .card-icon :global(svg) {
+    display: block;
+  }
+
+  /* ---------- #requirements ---------- */
+  .req-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  @media (min-width: 640px) {
+    .req-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .req-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 1280px) {
+    .req-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+  .req-card {
+    background: #fff;
+    border: 1px solid var(--hairline-light);
+    border-radius: var(--r-md);
+    padding: var(--sp-5);
+    display: grid;
+    gap: var(--sp-3);
+    align-content: start;
+  }
+  .req-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-2);
+  }
+  .req-num {
+    color: var(--slate-500);
+  }
+  .req-check :global(svg) {
+    display: block;
+  }
+
+  /* ---------- #dealer-form ---------- */
+  .form-sec {
+    background: var(--navy-800);
+    position: relative;
+    overflow: hidden;
+  }
+  .hex-pattern {
+    position: absolute;
+    right: -48px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: min(38vw, 420px);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .form-split {
+    position: relative;
+    display: grid;
+    gap: var(--sp-6);
+  }
+  @media (min-width: 1024px) {
+    .form-split {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-areas: 'head form' 'alt form';
+      grid-template-rows: auto 1fr;
+      align-items: start;
+      column-gap: var(--sp-8);
+    }
+    .pitch-head { grid-area: head; }
+    .form-col { grid-area: form; }
+    .pitch-alt { grid-area: alt; }
+  }
+  .pitch-head .lead {
+    margin-top: var(--sp-4);
+  }
+  .pitch-alt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+
+  /* ---------- CTA band ---------- */
+  .cta-band {
+    padding-block: var(--section-pad-strip);
+  }
+  .cta-band-inner {
+    display: grid;
+    gap: var(--sp-4);
+    justify-items: center;
+    text-align: center;
+  }
+</style>
