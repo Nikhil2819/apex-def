@@ -48,20 +48,22 @@ Do them in that order. Let's go.
 
 ## PART A — Put the website online (≈10 min)
 
+> **Note on the dashboard:** Cloudflare occasionally restyles this screen, so wording may differ slightly from the exact labels below. The two things you're looking for are always there: a **"drop a zip / folder"** upload box (to publish the site) and an **"Add a domain"** entry (to connect `apexdef.in`). If anything looks different, send me a screenshot and I'll point you to the exact button.
+
 ### A1. Create a free Cloudflare account
 1. Go to **https://dash.cloudflare.com/sign-up**
-2. Sign up with your email (`naveenrahul1994@gmail.com` is fine) and a password. Verify the email.
+2. Sign up with your email and a password, and verify the email. *(If you're already signed in — as in your dashboard — skip this.)*
 
-### A2. Create the Pages project and upload the site
-1. In the left sidebar, click **Workers & Pages**.
-2. Click **Create** → choose the **Pages** tab → click **Upload assets** (this is the drag-and-drop option — no GitHub needed).
-3. **Project name:** type `apexdef` → **Create project**.
-4. **Unzip `apexdef-site-production.zip` on your computer first** (double-click it → you get a folder of files). Then drag the **contents** of that folder (the `index.html`, `about`, `products`, `_astro`, etc. — *not* the outer zip) into the upload box.
-   - ⚠️ Drag the **files inside** the folder, so `index.html` sits at the top level of the upload — not a folder that *contains* index.html.
-5. Click **Deploy site**.
-6. After ~30 seconds you'll get a live URL like **`https://apexdef.pages.dev`**. Click it — **your website is now live on the internet.** 🎉
+### A2. Upload the website — the simplest path
+On the Cloudflare **Account home** screen ("Time to build something great."), there are three cards. Use the **left card, "Ship something new"** — it has a dashed box that reads **"Drop a folder, or a zip."**
 
-> At this point the site works, just on a temporary Cloudflare address. Next we point your real domain at it.
+1. Drag **`apexdef-site-production.zip`** (from your project folder) **straight into that "Drop a folder, or a zip" box.** You can drop the **zip as-is** — Cloudflare unpacks it for you. *(If you prefer, unzip it first and drop the resulting folder instead — either works.)*
+2. Cloudflare uploads it and asks you to **name the project** → type `apexdef` → click **Create app** (or **Deploy** / **Save and Deploy** — whatever the button says on that step).
+3. After ~30 seconds it finishes and shows a **temporary live URL ending in `.pages.dev`** (something like `apexdef-abc.pages.dev`). Click it — **your website is now live on the internet.** 🎉
+
+> ✅ Checkpoint: the whole site should open at that `.pages.dev` link — every page, the padlock, the 3D hero. It's just on a temporary Cloudflare address for now; Part B points your real `apexdef.in` at it.
+>
+> If the page comes up blank or 404s: you likely dropped a folder that *contains* another folder. Re-upload so `index.html` is at the top level (or just drop the zip, which avoids this entirely).
 
 ---
 
@@ -72,11 +74,11 @@ This swaps the domain's "nameservers" so Cloudflare manages `apexdef.in`. It's a
 > ℹ️ **About email:** moving nameservers moves *all* DNS for the domain to Cloudflare. If you set up email (`info@apexdef.in`, etc.) **later**, you'll add those records in Cloudflare instead of GoDaddy — that's covered in Part E. If you have **no** email/other services on this domain yet (likely, since it's new), there's nothing to lose.
 
 ### B1. Add your domain to Cloudflare
-1. In the Cloudflare dashboard, top of the page, click **Add a site** (or **+ Add** → **Existing domain**).
-2. Type **`apexdef.in`** → **Continue**.
-3. Choose the **Free** plan → **Continue**.
-4. Cloudflare scans your existing DNS records and shows a list. Since the domain is new, it'll likely be nearly empty — that's fine. Click **Continue**.
-5. Cloudflare now shows you **two nameservers**, something like:
+1. Go to the Cloudflare **Account home**. Use the **middle card, "Add a domain"** — it says *"Register a new domain or bring your own. Free DNS, automatic HTTPS…"*. In its **"Type in your domain…"** box, enter **`apexdef.in`** and press Enter / continue.
+   - *(Same flow lives in the left sidebar under **Domains → Overview**, if you don't see the card.)*
+2. Choose the **Free** plan when asked → **Continue**.
+3. Cloudflare scans your existing DNS records and shows a list. Since the domain is new, it'll likely be nearly empty — that's fine. Click **Continue**.
+4. Cloudflare now shows you **two nameservers**, something like:
    ```
    xxxx.ns.cloudflare.com
    yyyy.ns.cloudflare.com
@@ -88,7 +90,7 @@ This swaps the domain's "nameservers" so Cloudflare manages `apexdef.in`. It's a
 2. Click your profile → **My Products** → find **apexdef.in** → click **DNS** (or the three dots → **Manage DNS**).
 3. Scroll to the **Nameservers** section → click **Change** (or "Change Nameservers").
 4. Choose **"I'll use my own nameservers"** / **"Enter my own nameservers (advanced)"**.
-5. **Delete GoDaddy's nameservers and paste in the two Cloudflare ones** from step B1.5.
+5. **Delete GoDaddy's nameservers and paste in the two Cloudflare ones** from step B1.4.
 6. **Save**. GoDaddy may ask you to confirm — say yes.
 
 ### B3. Confirm the switch
@@ -101,13 +103,15 @@ This swaps the domain's "nameservers" so Cloudflare manages `apexdef.in`. It's a
 
 ## PART C — Attach apexdef.in to the website + turn on HTTPS (≈5 min)
 
-1. In Cloudflare, go to **Workers & Pages** → click your **apexdef** project.
-2. Open the **Custom domains** tab → **Set up a custom domain**.
-3. Type **`apexdef.in`** → **Continue** → **Activate domain**.
-   - Because Cloudflare now runs your DNS, it adds the needed record automatically. No manual DNS typing.
-4. Repeat for the **www** version: **Set up a custom domain** → type **`www.apexdef.in`** → activate. (The site already redirects `www` → the bare domain, so both work and visitors land on the clean `apexdef.in`.)
+1. Open your deployed site's project: in the **left sidebar** click **Compute** (under the **Build** heading) → click your **apexdef** app. *(This is where uploaded sites live in the new dashboard — the old "Workers & Pages" section.)*
+2. Find the **custom-domain** setting — it's labelled **"Domains & Routes"** or **"Custom domains"** (often under a **Settings** tab of the app) → click **Add** / **Set up a custom domain**.
+3. Type **`apexdef.in`** → confirm / **Activate domain**.
+   - Because Cloudflare now runs your DNS (Part B), it adds the needed record automatically. No manual DNS typing.
+4. Do it once more for the **www** version: add **`www.apexdef.in`**. (The site already redirects `www` → the bare domain, so both work and visitors land on the clean `apexdef.in`.)
 5. **HTTPS / the padlock is automatic.** Cloudflare issues a free SSL certificate within a few minutes of the domain going active. You don't do anything.
-6. **One recommended toggle:** in the domain's Cloudflare dashboard go to **SSL/TLS** → set encryption mode to **Full** (not "Flexible"). This ensures a clean secure connection.
+6. **One recommended toggle:** in the left sidebar open the **apexdef.in** domain → **SSL/TLS** → set encryption mode to **Full** (not "Flexible"). This ensures a clean secure connection.
+
+> Not sure which tab holds the custom-domain button in the new UI? Open the app and send me a screenshot — I'll point to the exact spot.
 
 **Done.** Once the nameservers are active (Part B) and the certificate is issued, open **https://apexdef.in** — the real site, on your domain, with a padlock.
 
@@ -129,7 +133,7 @@ The site is built to show `info@ / sales@ / dealers@apexdef.in` — currently hi
 - Then tell me and I flip the site's `showEmails` flag on, rebuild, you re-upload.
 
 ### D3. Analytics (2 min, free)
-- Cloudflare dashboard → your domain → **Analytics & Logs → Web Analytics** → enable. Free, privacy-friendly, no cookie banner needed. You'll see visitor counts, top pages, and (with a small snippet I can add) how many people tapped Call / WhatsApp.
+- Left sidebar → **Analytics** (under the **Observe** heading) → **Web Analytics** → **Add a site** → `apexdef.in`. Free, privacy-friendly, no cookie banner needed. You'll see visitor counts, top pages, and (with a small snippet I can add) how many people tapped Call / WhatsApp.
 
 ### D4. Google Search Console (5 min — gets you found on Google)
 1. Go to **https://search.google.com/search-console** → **Add property** → **URL prefix** → `https://apexdef.in`.
@@ -158,7 +162,7 @@ Since **August 2024, BIS certification (to IS 17042 Part 1) is legally mandatory
 
 Whenever you want changes (copy tweaks, colours, new sections, the form key, the BIS number, etc.):
 1. You tell me the changes → I make them and re-run the build → I hand you a fresh **`apexdef-site-production.zip`**.
-2. In Cloudflare: **Workers & Pages → apexdef → Create deployment** (or **Upload assets** again) → drag the new files → **Deploy**.
+2. In Cloudflare: left sidebar **Compute** (under **Build**) → open your **apexdef** app → **Create deployment** / **Upload new version** → drag the new zip → deploy.
 3. The live site updates in ~30 seconds. Your domain and settings stay exactly as they are — you only ever re-upload the files.
 
 > **Want zero-effort updates instead?** If you create a free **GitHub** account, I can push the project there and connect it to Cloudflare Pages once. After that, every change I make goes live automatically — no zip, no re-upload. Tell me if you'd like that; it's a 10-minute one-time setup.
