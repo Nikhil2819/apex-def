@@ -3,3 +3,6 @@ dist/
 .astro/
 .DS_Store
 .env
+
+# Production zip is regenerated on each build
+apexdef-site-production.zip
