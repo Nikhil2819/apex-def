@@ -1,3 +1,0 @@
-# Cloudflare Pages redirects. Canonical host is the bare apex domain (apexdef.in).
-# Send www → apex so the site never answers on two hostnames.
-https://www.apexdef.in/* https://apexdef.in/:splat 301
